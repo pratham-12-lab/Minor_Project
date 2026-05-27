@@ -1,0 +1,33 @@
+# This file is used on the DEPLOYMENT SERVER.
+# Images are pulled from Docker Hub (pre-built by Jenkins).
+# Usage: docker-compose -f docker-compose.deploy.yml up -d
+
+services:
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  backend:
+    image: ${DOCKER_USERNAME}/job-portal-backend:latest
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKER_USERNAME}/job-portal-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:

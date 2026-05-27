@@ -1,0 +1,28 @@
+Job_seeker:
+Pratham L Gaikwad
+Prathamlmysore2005@gmail.com
+9019879123
+Prathaml123@
+
+Recruiter:
+
+Shashank s
+Prathaml123@
+Shahanks@gmail.com
+Shashank S
+
+Admin:
+
+Srinivas S
+srinivass@gmail.com
+5678942313
+Prathaml123@
+
+cd c:\Users\prath\OneDrive\Desktop\Minor_Project\Job_Portal
+docker build -t prathaml/job-portal-backend:latest ./backend
+docker build -t prathaml/job-portal-frontend:latest ./frontend
+docker pull mongo:7.0
+docker images
+docker-compose up -d
+docker-compose ps
+docker-compose logs -f

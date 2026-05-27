@@ -1,0 +1,24 @@
+services:
+  backend:
+    image: prathaml/job-portal-backend:latest
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - job-portal-network
+
+  frontend:
+    image: prathaml/job-portal-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - job-portal-network
+
+networks:
+  job-portal-network:
+    driver: bridge

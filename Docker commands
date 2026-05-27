@@ -1,0 +1,46 @@
+docker compose down
+
+docker compose up -d
+
+docker ps
+
+Docker images
+
+# View logs
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Stop containers
+docker compose down
+
+# Restart containers
+docker compose restart
+
+# View container status
+docker ps
+
+docker compose up --build -d
+🎉 SUCCESS! Your Job Portal is now running in Docker!
+✅ What happened in the logs:
+MongoDB started - Created all collections: users, companies, jobs, applications, chats, skills, careerpaths
+Backend connected - Successfully connected to MongoDB and started on port 8000
+Frontend built - Vite build completed successfully, served via Nginx on port 80
+SMTP warning - Expected error since you haven't configured real email credentials yet
+🌐 Access your containerized Job Portal:
+Frontend (Web App): http://localhost
+Backend API: http://localhost:8000/api
+MongoDB: localhost:27017 (internal only)
+📋 Current Status:
+✅ MongoDB: Running (port 27017)
+✅ Backend API: Running (port 8000)
+✅ Frontend: Running (port 80)
+🛠️ Useful Docker Commands:
+⚠️ Next Steps (Optional):
+Configure Email - Update .env with real SMTP credentials to enable email features
+Push to Docker Hub - Tag and push your images for deployment
+Add SSL - Configure HTTPS for production
+Your Job Portal is now fully containerized and running! 🚀
+
+Test it: Open http://localhost in your browser to see your application running in containers.
+
+Grok Code Fast 1 • 1x
