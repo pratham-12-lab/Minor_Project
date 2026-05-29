@@ -1,0 +1,202 @@
+pipeline {
+    agent any
+
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_USERNAME        = "${DOCKER_HUB_CREDENTIALS_USR}"
+        BACKEND_IMAGE          = "${DOCKER_HUB_CREDENTIALS_USR}/job-portal-backend"
+        FRONTEND_IMAGE         = "${DOCKER_HUB_CREDENTIALS_USR}/job-portal-frontend"
+        IMAGE_TAG              = "${BUILD_NUMBER}"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    stages {
+
+        // ─────────────────────────────────────────────
+        // STAGE 1: Checkout
+        // ─────────────────────────────────────────────
+        stage('Checkout') {
+            steps {
+                echo '📥 Checking out source code...'
+                checkout scm
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 2: Install Dependencies
+        // ─────────────────────────────────────────────
+        stage('Install Dependencies') {
+            parallel {
+                stage('Backend - Install') {
+                    steps {
+                        dir('Job_Portal/backend') {
+                            echo '📦 Installing backend dependencies...'
+                            bat 'npm ci'
+                        }
+                    }
+                }
+                stage('Frontend - Install') {
+                    steps {
+                        dir('Job_Portal/frontend') {
+                            echo '📦 Installing frontend dependencies...'
+                            bat 'npm ci'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 3: Lint
+        // ─────────────────────────────────────────────
+        stage('Lint') {
+            parallel {
+                stage('Backend - Lint') {
+                    steps {
+                        dir('Job_Portal/backend') {
+                            echo '🔍 Linting backend...'
+                            bat 'npm run lint --if-present'
+                        }
+                    }
+                }
+                stage('Frontend - Lint') {
+                    steps {
+                        dir('Job_Portal/frontend') {
+                            echo '🔍 Linting frontend...'
+                            bat 'npm run lint'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 4: Code Quality Analysis (SonarQube)
+        // ─────────────────────────────────────────────
+        stage('Code Quality') {
+            steps {
+                echo '📊 Code Quality stage - SonarQube not configured, skipping...'
+                echo '💡 To enable: Install SonarQube Scanner plugin and configure SonarQube server'
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 5: Build
+        // ─────────────────────────────────────────────
+        stage('Build') {
+            parallel {
+                stage('Frontend - Build') {
+                    steps {
+                        dir('Job_Portal/frontend') {
+                            echo '🏗️ Building frontend...'
+                            bat 'npm run build'
+                        }
+                    }
+                }
+                stage('Backend - Verify') {
+                    steps {
+                        dir('Job_Portal/backend') {
+                            echo '✅ Verifying backend entry point...'
+                            bat 'node --check index.js'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 6: Docker Build
+        // ─────────────────────────────────────────────
+        stage('Docker Build') {
+            steps {
+                echo '🐳 Building Docker images...'
+                bat """
+                    docker build -t %BACKEND_IMAGE%:%IMAGE_TAG% -t %BACKEND_IMAGE%:latest Job_Portal\\backend
+                    docker build --build-arg VITE_API_BASE_URL=/api -t %FRONTEND_IMAGE%:%IMAGE_TAG% -t %FRONTEND_IMAGE%:latest Job_Portal\\frontend
+                """
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 7: Docker Push (only on main branch)
+        // ─────────────────────────────────────────────
+        stage('Docker Push') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo '📤 Pushing Docker images to Docker Hub...'
+                bat """
+                    echo %DOCKER_HUB_CREDENTIALS_PSW% | docker login -u %DOCKER_HUB_CREDENTIALS_USR% --password-stdin
+                    docker push %BACKEND_IMAGE%:%IMAGE_TAG%
+                    docker push %BACKEND_IMAGE%:latest
+                    docker push %FRONTEND_IMAGE%:%IMAGE_TAG%
+                    docker push %FRONTEND_IMAGE%:latest
+                    docker logout
+                """
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // STAGE 8: Deploy (only on main branch, requires SSH creds)
+        // ─────────────────────────────────────────────
+        stage('Deploy') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression {
+                        try {
+                            credentials('deploy-server-ssh')
+                            return true
+                        } catch (e) {
+                            echo '⚠️ deploy-server-ssh credential not found, skipping deploy.'
+                            return false
+                        }
+                    }
+                }
+            }
+            steps {
+                echo '🚀 Deploying to server...'
+                sshagent(credentials: ['deploy-server-ssh']) {
+                    bat """
+                        ssh -o StrictHostKeyChecking=no %DEPLOY_SERVER% "cd /opt/job-portal && docker pull %BACKEND_IMAGE%:latest && docker pull %FRONTEND_IMAGE%:latest && docker-compose down && docker-compose up -d && docker image prune -af"
+                    """
+                }
+            }
+        }
+
+    }
+
+    // ─────────────────────────────────────────────
+    // POST ACTIONS
+    // ─────────────────────────────────────────────
+    post {
+        always {
+            echo '🧹 Cleaning up local Docker images...'
+            // Use script block so we can access env vars safely
+            script {
+                def backendImg = "${env.DOCKER_HUB_CREDENTIALS_USR}/job-portal-backend"
+                def frontendImg = "${env.DOCKER_HUB_CREDENTIALS_USR}/job-portal-frontend"
+                def tag = "${env.BUILD_NUMBER}"
+                bat "docker rmi ${backendImg}:${tag} || exit 0"
+                bat "docker rmi ${frontendImg}:${tag} || exit 0"
+            }
+            cleanWs()
+        }
+        success {
+            echo '✅ Pipeline completed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed! Check the logs above.'
+        }
+    }
+}
