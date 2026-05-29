@@ -1,6 +1,7 @@
 pipeline {
     agent any
 
+    // Small update: verified GitHub push behavior with a comment
     triggers {
         githubPush()
     }
