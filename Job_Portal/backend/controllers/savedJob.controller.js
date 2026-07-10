@@ -82,6 +82,14 @@ export const getSavedJobs = async (req, res) => {
     try {
         const userId = req.id;
 
+        // If user is not authenticated, return empty array
+        if (!userId) {
+            return res.status(200).json({
+                success: true,
+                savedJobs: []
+            });
+        }
+
         const user = await User.findById(userId).populate({
             path: 'savedJobs',
             populate: {
@@ -89,6 +97,13 @@ export const getSavedJobs = async (req, res) => {
                 select: 'name location logo'
             }
         });
+
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                savedJobs: []
+            });
+        }
 
         return res.status(200).json({
             success: true,
@@ -110,7 +125,23 @@ export const checkJobSaved = async (req, res) => {
         const jobId = req.params.id;
         const userId = req.id;
 
+        // If user is not authenticated, job is not saved
+        if (!userId) {
+            return res.status(200).json({
+                success: true,
+                isSaved: false
+            });
+        }
+
         const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                isSaved: false
+            });
+        }
+
         const isSaved = user.savedJobs.includes(jobId);
 
         return res.status(200).json({

@@ -25,6 +25,14 @@ const ApplicantsTable = () => {
                 }
                 console.log('📝 Rejection feedback entered:', { message, messageLength: message.length });
             } else if (normalizedStatus === 'accepted') {
+                const confirmed = window.confirm(
+                    '🎯 Accept Application & Schedule Interview?\n\n' +
+                    'When you accept this application, an interview will be automatically scheduled for the candidate. ' +
+                    'The candidate will be notified via email with interview details.\n\n' +
+                    'Click OK to proceed with acceptance and interview scheduling.'
+                );
+                if (!confirmed) return;
+                
                 const optionalMessage = window.prompt('Optional: add a short message for the candidate (press Cancel to skip).');
                 if (optionalMessage && optionalMessage.trim()) {
                     message = optionalMessage.trim();
@@ -34,13 +42,25 @@ const ApplicantsTable = () => {
             console.log('🚀 Sending status update:', { status, message, messageLength: message ? message.length : 0 });
             axios.defaults.withCredentials = true;
             const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status, message });
+            
             if (res.data.success) {
-                toast.success(res.data.message);
+                // Enhanced feedback for interview scheduling
+                if (res.data.interviewScheduled) {
+                    toast.success(
+                        '🎉 Success! Application accepted and interview automatically scheduled! ' +
+                        'The candidate has been notified via email.',
+                        { duration: 6000 }
+                    );
+                } else {
+                    toast.success(res.data.message);
+                }
+                
                 setTimeout(() => {
                     window.location.reload();
-                }, 500);
+                }, 1500);
             }
         } catch (error) {
+            console.error('Error updating status:', error);
             toast.error(error?.response?.data?.message || 'Failed to update status');
         }
     }
@@ -56,6 +76,7 @@ const ApplicantsTable = () => {
                         <TableHead>Contact</TableHead>
                         <TableHead>Resume</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -72,24 +93,42 @@ const ApplicantsTable = () => {
                                     }
                                 </TableCell>
                                 <TableCell>{item?.applicant.createdAt.split("T")[0]}</TableCell>
+                                <TableCell>
+                                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                        item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        item.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                        item.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                        item.status === 'interview-scheduled' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || 'Unknown'}
+                                    </span>
+                                </TableCell>
                                 <TableCell className="float-right cursor-pointer">
-                                    <Popover>
-                                        <PopoverTrigger>
-                                            <MoreHorizontal />
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-32">
-                                            {
-                                                shortlistingStatus.map((status, index) => {
-                                                    return (
-                                                        <div onClick={() => statusHandler(status, item?._id)} key={index} className='flex w-fit items-center my-2 cursor-pointer'>
-                                                            <span>{status}</span>
-                                                        </div>
-                                                    )
-                                                })
-                                            }
-                                        </PopoverContent>
-                                    </Popover>
-
+                                    {item.status === 'pending' ? (
+                                        <Popover>
+                                            <PopoverTrigger>
+                                                <MoreHorizontal />
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-32">
+                                                {
+                                                    shortlistingStatus.map((status, index) => {
+                                                        return (
+                                                            <div onClick={() => statusHandler(status, item?._id)} key={index} className='flex w-fit items-center my-2 cursor-pointer'>
+                                                                <span>{status}</span>
+                                                            </div>
+                                                        )
+                                                    })
+                                                }
+                                            </PopoverContent>
+                                        </Popover>
+                                    ) : (
+                                        <div className="text-sm text-gray-500">
+                                            {item.status === 'accepted' && '✓ Accepted'}
+                                            {item.status === 'rejected' && '✗ Rejected'}
+                                            {item.status === 'interview-scheduled' && '📅 Interview Scheduled'}
+                                        </div>
+                                    )}
                                 </TableCell>
 
                             </tr>

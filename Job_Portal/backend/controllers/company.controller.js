@@ -40,22 +40,31 @@ export const registerCompany = async (req, res) => {
 export const getCompany = async (req, res) => {
     try {
         const userId = req.id; // logged in user id
-        const companies = await Company.find({ userId });
-        if (!companies || companies.length === 0) {
-            return res.status(404).json({
-                message: "Companies not found.",
+        console.log('📊 getCompany called for user:', userId);
+
+        if (!userId) {
+            console.log('❌ No user ID found in request');
+            return res.status(401).json({
+                message: "Authentication required",
                 success: false
-            })
+            });
         }
+
+        const companies = await Company.find({ userId });
+        console.log(`✅ Found ${companies ? companies.length : 0} companies for user ${userId}`);
+
         return res.status(200).json({
-            companies,
-            success: true
-        })
+            companies: companies || [],
+            success: true,
+            message: companies && companies.length > 0 ? "Companies fetched successfully" : "No companies found"
+        });
+
     } catch (error) {
-        console.log(error);
+        console.error('❌ Get companies error:', error);
         return res.status(500).json({
-            message: "Something went wrong.",
-            success: false
+            message: "Failed to fetch companies",
+            success: false,
+            error: error.message
         });
     }
 }

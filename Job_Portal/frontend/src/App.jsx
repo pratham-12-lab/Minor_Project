@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
+import { useSocket } from './hooks/useSocket';
+import { useSelector } from 'react-redux';
 
 // Auth components
 import Login from './components/auth/Login';
@@ -30,7 +32,44 @@ import ProtectedRoute from './components/admin/ProtectedRoute';
 import Chatbot from './components/Chatbot/Chatbot';
 import AnalyticsDashboard from './components/analytics/AnalyticsDashboard';
 
+// Phase 2: Chat & Notifications
+import ChatPage from './pages/Chat/ChatPage';
+import MessagesPage from './pages/Messages/MessagesPage';
+import NotificationsPage from './pages/Notifications/NotificationsPage';
+
+// New Advanced Features
+import ApplicationReview from './components/recruiter/ApplicationReview';
+import InterviewScheduling from './components/interview/InterviewScheduling';
+import InterviewDashboard from './components/interview/InterviewDashboard';
+import InterviewFeedback from './components/interview/InterviewFeedback';
+import ProfileViews from './components/profile/ProfileViews';
+import RecruiterDashboard from './components/recruiter/RecruiterDashboard';
+import CandidateSearch from './components/recruiter/CandidateSearch';
+import TestFeatures from './components/TestFeatures';
+
 function App() {
+  const { initializeSocket, disconnectSocket } = useSocket();
+  const user = useSelector((state) => state.auth?.user);
+  const token = localStorage.getItem('token');
+
+  // Initialize socket connection when user logs in
+  useEffect(() => {
+    if (token && user) {
+      initializeSocket(
+        token,
+        user._id || user.id,
+        user.fullname || user.fullName || user.email,
+        user.role || 'CANDIDATE'
+      );
+    }
+
+    // Cleanup on unmount
+    return () => {
+      // Don't disconnect on unmount - keep connection alive for notifications
+      // disconnectSocket();
+    };
+  }, [token, user, initializeSocket]);
+
   return (
     <NotificationProvider>
       <Router>
@@ -56,6 +95,7 @@ function App() {
             <Route path="/saved-jobs" element={<SavedJobs />} />
             <Route path="/job-alerts" element={<JobAlerts />} />
             <Route path="/test-email" element={<EmailTest />} />
+            <Route path="/test-features" element={<TestFeatures />} />
             <Route path="/pending-verification" element={<PendingVerification />} />
 
             {/* Admin Dashboard */}
@@ -114,6 +154,83 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
                   <Applicants />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Phase 2: Chat & Notifications Routes */}
+            <Route path="/chat/:roomId" element={<ChatPage />} />
+            <Route path="/chat/user/:userId" element={<ChatPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+
+            {/* Advanced Features Routes */}
+            
+            {/* Profile Views (Student) */}
+            <Route path="/student/profile/views" element={<ProfileViews />} />
+
+            {/* Interview Routes for Candidates */}
+            <Route 
+              path="/student/interviews" 
+              element={
+                <ProtectedRoute allowedRoles={['candidate', 'student']}>
+                  <InterviewDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Recruiter Advanced Features */}
+            <Route 
+              path="/recruiter/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <RecruiterDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Interview Management for Recruiters */}
+            <Route 
+              path="/recruiter/interviews" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <InterviewDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/recruiter/applications/:jobId" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <ApplicationReview />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/recruiter/interviews/schedule/:applicationId" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <InterviewScheduling />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/recruiter/interviews/:interviewId/feedback" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <InterviewFeedback />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/recruiter/candidates/search" 
+              element={
+                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                  <CandidateSearch />
                 </ProtectedRoute>
               } 
             />

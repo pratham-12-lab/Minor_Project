@@ -2,6 +2,7 @@ import { Job } from "../models/job.model.js";
 import { User } from "../models/user.model.js";
 import emailService from "../services/emailService.js";
 import { sendJobAlertEmail } from "./jobAlert.controller.js";
+import notificationHandler from "../websocket/notification-handler.js";
 
 // ✅ CREATE JOB (ADMIN / EMPLOYER) with job alerts
 export const postJob = async (req, res) => {
@@ -19,28 +20,103 @@ export const postJob = async (req, res) => {
     } = req.body;
     const userId = req.id; // authenticated user
 
+    console.log('📝 Job creation attempt:', {
+      userId,
+      title,
+      companyId,
+      experience,
+      requiredFields: {
+        title: !!title,
+        description: !!description,
+        requirements: !!requirements,
+        salary: !!salary,
+        location: !!location,
+        jobType: !!jobType,
+        experience: !!experience,
+        position: !!position,
+        companyId: !!companyId
+      }
+    });
+
     // Validate required fields
     if (!title || !description || !requirements || !salary || !location || 
         !jobType || !experience || !position || !companyId) {
+      console.log('❌ Validation failed - missing required fields');
       return res.status(400).json({
         message: "All fields are required.",
+        success: false,
+        missingFields: {
+          title: !title,
+          description: !description,
+          requirements: !requirements,
+          salary: !salary,
+          location: !location,
+          jobType: !jobType,
+          experience: !experience,
+          position: !position,
+          companyId: !companyId
+        }
+      });
+    }
+
+    // Validate experience level
+    const validExperienceLevels = ['Entry-level', 'Mid-level', 'Senior', 'Executive'];
+    if (!validExperienceLevels.includes(experience)) {
+      console.log('❌ Invalid experience level:', experience);
+      return res.status(400).json({
+        message: `Invalid experience level. Must be one of: ${validExperienceLevels.join(', ')}`,
         success: false
       });
     }
+
+    // Validate and convert numeric fields
+    const salaryNum = Number(salary);
+    const positionNum = Number(position);
+    
+    if (isNaN(salaryNum) || salaryNum <= 0) {
+      console.log('❌ Invalid salary:', salary);
+      return res.status(400).json({
+        message: "Salary must be a positive number",
+        success: false
+      });
+    }
+    
+    if (isNaN(positionNum) || positionNum <= 0) {
+      console.log('❌ Invalid position count:', position);
+      return res.status(400).json({
+        message: "Position count must be a positive number",
+        success: false
+      });
+    }
+
+    console.log('✅ Creating job with data:', {
+      title,
+      description: description.substring(0, 100) + '...',
+      requirements: Array.isArray(requirements) ? requirements : requirements.split(",").map(req => req.trim()),
+      salary: salaryNum,
+      location,
+      jobType,
+      experienceLevel: experience,
+      position: positionNum,
+      company: companyId,
+      created_by: userId
+    });
 
     // Create job
     const job = await Job.create({
       title,
       description,
-      requirements: requirements.split(",").map(req => req.trim()),
-      salary: Number(salary),
+      requirements: Array.isArray(requirements) ? requirements : requirements.split(",").map(req => req.trim()),
+      salary: salaryNum,
       location,
       jobType,
       experienceLevel: experience,
-      position,
+      position: positionNum,
       company: companyId,
       created_by: userId
     });
+
+    console.log('✅ Job created successfully:', job._id);
 
     // Populate company details
     await job.populate("company");
@@ -61,6 +137,35 @@ export const postJob = async (req, res) => {
       ).catch(err => 
         console.error('Employer notification error:', err)
       );
+    }
+
+    // 🔔 NEW: Send real-time notifications to relevant candidates
+    const socketManager = req.app.get('socketManager');
+    if (socketManager) {
+      // Find candidates who might be interested (basic matching by experience level)
+      const potentialCandidates = await User.find({
+        role: 'student', // assuming students are job seekers
+        // You can add more sophisticated matching logic here
+      }).limit(50); // Limit to avoid overwhelming
+
+      // Send notifications to matching candidates
+      for (const candidate of potentialCandidates) {
+        try {
+          await notificationHandler.sendNotification(
+            candidate._id,
+            {
+              type: 'JOB',
+              title: 'New Job Available',
+              message: `New ${experience} position: ${title} at ${job.company.name}`,
+              actionUrl: `/jobs/${job._id}`,
+              relatedId: job._id,
+            },
+            socketManager
+          );
+        } catch (error) {
+          console.error(`Failed to send notification to candidate ${candidate._id}:`, error);
+        }
+      }
     }
 
     return res.status(201).json({
@@ -253,26 +358,31 @@ export const getJobById = async (req, res) => {
 export const getAdminJobs = async (req, res) => {
   try {
     const userId = req.id;
+    console.log('📊 getAdminJobs called for user:', userId);
+
+    if (!userId) {
+      console.log('❌ No user ID found in request');
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+    }
 
     const jobs = await Job.find({ created_by: userId })
       .populate("company")
       .sort({ createdAt: -1 });
 
-    if (!jobs || jobs.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No jobs found."
-      });
-    }
+    console.log(`✅ Found ${jobs ? jobs.length : 0} jobs for user ${userId}`);
 
     return res.status(200).json({
       success: true,
-      jobs,
-      count: jobs.length
+      jobs: jobs || [],
+      count: jobs ? jobs.length : 0,
+      message: jobs && jobs.length > 0 ? "Jobs fetched successfully" : "No jobs found"
     });
 
   } catch (error) {
-    console.error('Get admin jobs error:', error);
+    console.error('❌ Get admin jobs error:', error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch your jobs",

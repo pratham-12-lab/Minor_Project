@@ -6,6 +6,12 @@ import { singleUpload } from "../middlewares/mutler.js";
 
 const router = express.Router();
 
+// Add logging middleware for debugging
+router.use((req, res, next) => {
+    console.log(`🔍 Company route hit: ${req.method} ${req.path}`);
+    next();
+});
+
 // ✅ POST endpoints require recruiter verification (blocks rejected/pending recruiters from writing)
 router.route("/register").post(isRecruiterVerified, registerCompany);
 

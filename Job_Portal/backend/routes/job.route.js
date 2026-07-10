@@ -14,9 +14,9 @@ const router = express.Router();
 
 router.route("/post").post(isAuthenticated, checkEmployerVerification, postJob);
 router.route("/update/:id").put(isAuthenticated, checkEmployerVerification, updateJob);
-router.route("/get").get(isAuthenticated, getAllJobs);
-router.route("/search").get(isAuthenticated, getFilteredJobs); // ✅ Advanced search
-router.route("/get/:id").get(isAuthenticated, getJobById);
+router.route("/get").get(getAllJobs); // ✅ Make this public so guests can view jobs
+router.route("/search").get(getFilteredJobs); // ✅ Make search public for guest browsing
+router.route("/get/:id").get(getJobById); // ✅ Make individual job view public
 router.route("/getadminjobs").get(isAuthenticated, getAdminJobs);
 
 export default router;

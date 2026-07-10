@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Search, X } from 'lucide-react';
+import { Button } from './ui/button';
+import { Search, X, Filter, ChevronDown } from 'lucide-react';
 
-const FilterCard = ({ filters, onFilterChange }) => {
+const FilterCard = ({ filters, onFilterChange, isMobile = false, isOpen = false, onClose }) => {
   // Search states
   const [locationSearch, setLocationSearch] = useState('');
   const [jobTypeSearch, setJobTypeSearch] = useState('');
@@ -32,7 +33,6 @@ const FilterCard = ({ filters, onFilterChange }) => {
     }
   };
 
-  // ✅ Handle custom location entry (Enter key)
   const handleLocationKeyPress = (e) => {
     if (e.key === 'Enter' && locationSearch.trim()) {
       handleSelection('location', locationSearch.trim());
@@ -43,7 +43,22 @@ const FilterCard = ({ filters, onFilterChange }) => {
     onFilterChange({ [field]: '' });
   };
 
-  // ✅ Suggested options (not mandatory)
+  const clearAllFilters = () => {
+    onFilterChange({
+      location: '',
+      jobType: '',
+      experienceLevel: '',
+      salaryMin: '',
+      salaryMax: '',
+      skills: '',
+      dateFrom: ''
+    });
+  };
+
+  // Count active filters
+  const activeFilterCount = Object.values(filters).filter(value => value && value !== '').length;
+
+  // Suggested options
   const suggestedLocations = ['Bangalore', 'Delhi NCR', 'Hyderabad', 'Pune', 'Mumbai', 'Chennai', 'Kolkata', 'Ahmedabad', 'Noida', 'Gurgaon'];
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance', 'Remote'];
   const experienceLevels = ['Entry Level', 'Mid Level', 'Senior Level', 'Lead', 'Manager', 'Director'];
@@ -58,8 +73,35 @@ const FilterCard = ({ filters, onFilterChange }) => {
     exp.toLowerCase().includes(experienceSearch.toLowerCase())
   );
 
-  return (
-    <div className="w-full bg-white p-4 rounded-md shadow-sm border border-gray-200 sticky top-5 space-y-4">
+  const FilterContent = () => (
+    <div className="space-y-4">
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="flex items-center justify-between pb-4 border-b">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Filters</h2>
+            {activeFilterCount > 0 && (
+              <span className="bg-[#6A38C2] text-white text-xs px-2 py-1 rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Clear All Filters */}
+      {activeFilterCount > 0 && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600">{activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}</span>
+          <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-red-600 hover:text-red-800">
+            Clear All
+          </Button>
+        </div>
+      )}
       
       {/* Location Search */}
       <div>
@@ -88,7 +130,6 @@ const FilterCard = ({ filters, onFilterChange }) => {
 
             {showLocationDropdown && (
               <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto border border-gray-200 rounded-md bg-white shadow-lg">
-                {/* Show filtered suggestions */}
                 {filteredLocations.length > 0 && (
                   <>
                     <div className="p-2 text-xs text-gray-500 font-semibold">Suggested Locations</div>
@@ -104,7 +145,6 @@ const FilterCard = ({ filters, onFilterChange }) => {
                   </>
                 )}
                 
-                {/* ✅ Option to use custom location */}
                 {locationSearch.trim() && (
                   <div 
                     className="p-2 hover:bg-green-50 cursor-pointer text-sm border-t border-gray-200 text-green-700 font-medium"
@@ -211,7 +251,7 @@ const FilterCard = ({ filters, onFilterChange }) => {
 
       {/* Salary Range */}
       <div>
-        <Label className="font-semibold text-sm mb-2 block">Salary Range</Label>
+        <Label className="font-semibold text-sm mb-2 block">Salary Range (LPA)</Label>
         <div className="flex gap-2">
           <Input
             type="number"
@@ -253,6 +293,15 @@ const FilterCard = ({ filters, onFilterChange }) => {
         />
       </div>
 
+      {/* Mobile Apply Filters Button */}
+      {isMobile && (
+        <div className="pt-4 border-t">
+          <Button onClick={onClose} className="w-full bg-[#6A38C2] hover:bg-[#5b30a6]">
+            Apply Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          </Button>
+        </div>
+      )}
+
       {/* Overlay to close dropdowns */}
       {(showLocationDropdown || showJobTypeDropdown || showExperienceDropdown) && (
         <div 
@@ -266,6 +315,57 @@ const FilterCard = ({ filters, onFilterChange }) => {
       )}
     </div>
   );
+
+  // Mobile Drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        {isOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={onClose}
+          />
+        )}
+        
+        {/* Mobile Drawer */}
+        <div className={`
+          fixed bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-xl z-50 md:hidden
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-y-0' : 'translate-y-full'}
+          max-h-[85vh] overflow-y-auto
+        `}>
+          <div className="p-4">
+            <FilterContent />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop Sidebar
+  return (
+    <div className="hidden md:block w-full bg-white p-4 rounded-md shadow-sm border border-gray-200 sticky top-5">
+      <FilterContent />
+    </div>
+  );
 };
+
+// Mobile Filter Button Component
+export const MobileFilterButton = ({ onOpen, activeFilterCount }) => (
+  <Button 
+    onClick={onOpen}
+    variant="outline" 
+    className="md:hidden flex items-center gap-2 bg-white border-gray-300"
+  >
+    <Filter className="h-4 w-4" />
+    Filters
+    {activeFilterCount > 0 && (
+      <span className="bg-[#6A38C2] text-white text-xs px-2 py-1 rounded-full">
+        {activeFilterCount}
+      </span>
+    )}
+  </Button>
+);
 
 export default FilterCard;

@@ -37,6 +37,14 @@ export const getJobAlerts = async (req, res) => {
     try {
         const userId = req.id;
 
+        // If user is not authenticated, return empty array
+        if (!userId) {
+            return res.status(200).json({
+                success: true,
+                jobAlerts: []
+            });
+        }
+
         const jobAlerts = await JobAlert.find({ user: userId });
 
         return res.status(200).json({

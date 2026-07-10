@@ -76,12 +76,18 @@ export const approveEmployer = async (req, res) => {
             });
         }
 
-        // ✅ Send approval email
-        await emailService.sendEmployerApprovalEmail(
-            employer.email,
-            employer.fullname,
-            'approved'
-        );
+        // ✅ Send approval email (non-blocking, handle errors gracefully)
+        try {
+            await emailService.sendEmployerApprovalEmail(
+                employer.email,
+                employer.fullname,
+                'approved'
+            );
+            console.log(`✅ Approval email sent to ${employer.email}`);
+        } catch (emailError) {
+            console.error(`❌ Failed to send approval email to ${employer.email}:`, emailError.message);
+            // Don't fail the whole operation if email fails - just log it
+        }
 
         return res.status(200).json({
             success: true,
@@ -127,13 +133,19 @@ export const rejectEmployer = async (req, res) => {
             });
         }
 
-        // ✅ Send rejection email
-        await emailService.sendEmployerApprovalEmail(
-            employer.email,
-            employer.fullname,
-            'rejected',
-            reason
-        );
+        // ✅ Send rejection email (non-blocking, handle errors gracefully)
+        try {
+            await emailService.sendEmployerApprovalEmail(
+                employer.email,
+                employer.fullname,
+                'rejected',
+                reason
+            );
+            console.log(`✅ Rejection email sent to ${employer.email}`);
+        } catch (emailError) {
+            console.error(`❌ Failed to send rejection email to ${employer.email}:`, emailError.message);
+            // Don't fail the whole operation if email fails - just log it
+        }
 
         return res.status(200).json({
             success: true,

@@ -15,10 +15,21 @@ const Applicants = () => {
     useEffect(() => {
         const fetchAllApplicants = async () => {
             try {
-                const res = await axios.get(`${APPLICATION_API_END_POINT}/${params.id}/applicants`, { withCredentials: true });
+                console.log('🔍 Fetching applicants for job ID:', params.id);
+                const token = localStorage.getItem('token');
+                console.log('🔍 Using token:', token ? 'Token exists' : 'No token found');
+                
+                const res = await axios.get(`${APPLICATION_API_END_POINT}/${params.id}/applicants`, { 
+                    headers: { 
+                        Authorization: `Bearer ${token}` 
+                    }
+                });
+                
+                console.log('✅ API Response:', res.data);
                 dispatch(setAllApplicants(res.data.job));
             } catch (error) {
-                console.log(error);
+                console.log('❌ Error fetching applicants:', error);
+                console.log('❌ Error response:', error.response?.data);
             }
         }
         fetchAllApplicants();

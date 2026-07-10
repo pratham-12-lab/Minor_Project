@@ -1,98 +1,127 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, X, MessageCircle, MapPin, Briefcase, DollarSign } from 'lucide-react';
+import { Send, X, Bot, User, ThumbsUp, ThumbsDown, Loader2, MapPin, Briefcase, DollarSign, MessageCircle, Minimize2 } from 'lucide-react';
 import { CHATBOT_API_END_POINT } from '../../utils/constant';
 import { useNavigate, Link } from 'react-router-dom';
 import { Avatar, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import { useSelector } from 'react-redux';
 
 const MessageContent = ({ content }) => {
-    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    const boldRegex = /\*\*([^*]+)\*\*/g;
-  
-    const parts = content.split(linkRegex);
-  
-    return (
-      <p className="text-sm whitespace-pre-wrap">
-        {parts.map((part, index) => {
-          if (index % 3 === 1) {
-            const linkText = parts[index];
-            const linkUrl = parts[index + 1];
-            if (linkUrl.startsWith('http')) {
-              return (
-                <a key={index} href={linkUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                  {linkText}
-                </a>
-              );
-            }
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const boldRegex = /\*\*([^*]+)\*\*/g;
+  const parts = content.split(linkRegex);
+
+  return (
+    <div className="text-sm whitespace-pre-wrap leading-relaxed">
+      {parts.map((part, index) => {
+        if (index % 3 === 1) {
+          const linkText = parts[index];
+          const linkUrl = parts[index + 1];
+          if (linkUrl && linkUrl.startsWith('http')) {
             return (
-              <Link key={index} to={linkUrl} className="text-blue-500 hover:underline">
+              <a key={index} href={linkUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-medium">
+                {linkText}
+              </a>
+            );
+          }
+          if (linkUrl) {
+            return (
+              <Link key={index} to={linkUrl} className="text-blue-500 hover:underline font-medium">
                 {linkText}
               </Link>
             );
-          } else if (index % 3 === 0) {
-            const boldParts = part.split(boldRegex);
-            return boldParts.map((boldPart, boldIndex) => {
-                if (boldIndex % 2 === 1) {
-                    return <strong key={boldIndex}>{boldPart}</strong>;
-                }
-                return boldPart;
-            });
           }
-          return null;
-        })}
-      </p>
-    );
-  };
-  
+        } else if (index % 3 === 0) {
+          const boldParts = part.split(boldRegex);
+          return boldParts.map((boldPart, boldIndex) => {
+            if (boldIndex % 2 === 1) {
+              return <strong key={boldIndex} className="font-semibold text-gray-900">{boldPart}</strong>;
+            }
+            return boldPart;
+          });
+        }
+        return null;
+      })}
+    </div>
+  );
+};
 
 const Chatbot = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Hi! I\'m your Job Portal assistant. How can I help you today?',
-      timestamp: new Date(),
-      jobs: [],
-      applications: []
-    }
-  ]);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationContext, setConversationContext] = useState({});
+  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const user = useSelector((state) => state?.auth?.user);
+
+  // Initialize welcome message and session
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(newSessionId);
+      
+      const welcomeMessage = {
+        role: 'assistant',
+        content: user 
+          ? `👋 Hello ${user.fullname || 'there'}! I'm your AI-powered career assistant.
+
+🎯 **I can help you with:**
+• Job search and recommendations
+• Application status tracking 
+• Profile optimization tips
+• Interview preparation
+• Skill gap analysis
+• Career development advice
+
+What specific career challenge can I help you tackle today?`
+          : `👋 Welcome to our Job Portal! I'm your AI career assistant.
+
+🎯 **I can help you with:**
+• Job search and discovery
+• Career guidance and tips  
+• Interview preparation
+• General career questions
+• Industry insights
+
+💡 **For personalized features**, please log in to your account.
+
+What can I help you with today?`,
+        timestamp: new Date(),
+        jobs: [],
+        applications: [],
+        source: 'ai-powered',
+        suggestions: user ? [
+          'Show me my application status',
+          'Find jobs in my field',
+          'Check my profile completeness',
+          'Help me prepare for interviews'
+        ] : [
+          'Find software engineer jobs',
+          'Career tips for beginners',
+          'How to prepare for interviews'
+        ]
+      };
+      
+      setMessages([welcomeMessage]);
+    }
+  }, [isOpen, user]);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const getStatusBadgeClasses = (status = '') => {
-    const normalized = status.toLowerCase();
-    if (normalized === 'accepted') {
-      return 'bg-green-100 text-green-700 border border-green-200';
-    }
-    if (normalized === 'rejected') {
-      return 'bg-red-100 text-red-700 border border-red-200';
-    }
-    return 'bg-gray-100 text-gray-700 border border-gray-200';
-  };
-
-  const formatDate = (value) => {
-    if (!value) return '—';
-    try {
-      return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return '—';
-    }
-  };
-
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = {
       role: 'user',
-      content: input,
+      content: input.trim(),
       timestamp: new Date()
     };
 
@@ -101,28 +130,31 @@ const Chatbot = () => {
     setIsLoading(true);
 
     try {
-      // Get chat history (last 10 messages)
-      const history = messages.slice(-10).map(({ role, content }) => ({
-        role,
-        content
-      }));
+      const endpoint = user ? `${CHATBOT_API_END_POINT}/message` : `${CHATBOT_API_END_POINT}/chat`;
+      const requestBody = user ? {
+        message: userMessage.content,
+        userId: user._id,
+        userRole: user.role || 'student',
+        sessionId: sessionId,
+        conversationContext
+      } : {
+        message: userMessage.content,
+        history: messages.slice(-6).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        conversationContext
+      };
 
-      const response = await fetch(`${CHATBOT_API_END_POINT}/chat`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({
-          message: input,
-          history: history,
-          conversationContext: conversationContext
-        })
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Server error occurred' }));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
+        throw new Error('Server error occurred');
       }
 
       const data = await response.json();
@@ -134,23 +166,32 @@ const Chatbot = () => {
           timestamp: new Date(),
           jobs: data.jobs || [],
           applications: data.applications || [],
-          location: data.location || null
+          source: data.source || 'ai-powered',
+          suggestions: data.suggestions || []
         };
+        
         setMessages(prev => [...prev, assistantMessage]);
+        
         if (data.conversationContext) {
-            setConversationContext(data.conversationContext);
+          setConversationContext(data.conversationContext);
         }
       } else {
         throw new Error(data.message || 'Failed to process message');
       }
     } catch (error) {
       console.error('Chat error:', error);
+      
+      const errorContent = !user && error.message.includes('authentication') 
+        ? '🔐 For personalized features, please log in to your account. I can still help with general job search!'
+        : `❌ Sorry, I encountered an error. Please try again.`;
+      
       const errorMessage = {
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error.message}. Please try again.`,
+        content: errorContent,
         timestamp: new Date(),
         jobs: [],
-        applications: []
+        applications: [],
+        source: 'error'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -165,171 +206,239 @@ const Chatbot = () => {
     }
   };
 
+  const JobCard = ({ job }) => (
+    <div 
+      className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => navigate(`/description/${job._id}`)}
+    >
+      <div className="flex items-start gap-3">
+        {job.company?.logo && (
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarImage src={job.company.logo} alt={job.company.name} />
+          </Avatar>
+        )}
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-gray-900 truncate">{job.title}</h4>
+          <p className="text-xs text-gray-600 truncate">{job.company?.name}</p>
+          <div className="flex items-center gap-4 mt-2">
+            {job.location && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <MapPin className="h-3 w-3" />
+                <span className="truncate">{job.location}</span>
+              </div>
+            )}
+            {job.jobType && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                {job.jobType}
+              </Badge>
+            )}
+            {job.salary > 0 && (
+              <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                <DollarSign className="h-3 w-3" />
+                <span>{job.salary} LPA</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* Floating Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 z-50"
-          aria-label="Open chat"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-[#6A38C2] to-[#5b30a6] hover:from-[#5b30a6] hover:to-[#4a2890] text-white rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 z-50"
+          aria-label="Open AI Career Assistant"
         >
-          <MessageCircle size={28} />
+          <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+          
+          {/* AI Badge */}
+          <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <span className="text-xs text-white font-bold">AI</span>
+          </div>
         </button>
       )}
 
-      {/* Chat Window */}
+      {/* Responsive Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
-          {/* Header */}
-          <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageCircle size={24} />
-              <div>
-                <h3 className="font-semibold">Job Portal Assistant</h3>
-                <p className="text-xs text-blue-100">Online</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="hover:bg-blue-700 rounded p-1 transition"
-              aria-label="Close chat"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    msg.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-800 border border-gray-200'
-                  }`}
-                >
-                  <MessageContent content={msg.content} />
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {msg.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50">
+          {/* Mobile Backdrop */}
+          <div className="sm:hidden absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsOpen(false)} />
+          
+          {/* Chat Container */}
+          <div className="bg-white h-full sm:h-[600px] w-full sm:w-96 sm:rounded-2xl shadow-2xl flex flex-col border-0 sm:border border-gray-200 relative">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#6A38C2] to-[#5b30a6] text-white px-4 py-4 sm:rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Bot className="w-5 h-5" />
                 </div>
-                
-                {/* Display Application Status Cards */}
-                {msg.applications && msg.applications.length > 0 && (
-                  <div className="mt-2 w-full max-w-[85%] space-y-3">
-                    {msg.applications.map((app) => (
-                      <div
-                        key={app.id}
-                        className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h4 className="font-semibold text-sm text-gray-900 truncate">{app.jobTitle}</h4>
-                            <p className="text-xs text-gray-600 truncate">at {app.companyName}</p>
-                          </div>
-                          <Badge className={`${getStatusBadgeClasses(app.status)} text-[10px] px-2 py-1`}>
-                            {app.status?.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 space-y-1 text-xs text-gray-600">
-                          <p><span className="font-semibold text-gray-700">Applied:</span> {formatDate(app.appliedOn)}</p>
-                          <p><span className="font-semibold text-gray-700">Last update:</span> {formatDate(app.updatedAt)}</p>
-                          {app.feedback && (
-                            <p className="text-gray-700"><span className="font-semibold">Employer feedback:</span> {app.feedback}</p>
-                          )}
-                          {app.suggestedSkills && app.suggestedSkills.length > 0 && (
-                            <p className="text-gray-700">
-                              <span className="font-semibold">Suggested skills:</span> {app.suggestedSkills.join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Display Job Cards or No Results Message */}
-                {msg.jobs && msg.jobs.length > 0 ? (
-                  <div className="mt-2 w-full max-w-[85%] space-y-2">
-                    {msg.jobs.map((job) => (
-                      <div
-                        key={job._id}
-                        onClick={() => navigate(`/description/${job._id}`)}
-                        className="bg-white border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start gap-3">
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage src={job.company?.logo} alt={job.company?.name} />
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-gray-900 truncate">{job.title}</h4>
-                            <p className="text-xs text-gray-600 truncate">{job.company?.name}</p>
-                            <div className="flex items-center gap-3 mt-2 flex-wrap">
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <MapPin size={12} />
-                                <span>{job.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <DollarSign size={12} />
-                                <span>{job.salary} LPA</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <Briefcase size={12} />
-                                <span>{job.jobType}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : msg.location && msg.content.includes('No jobs found') ? (
-                  <div className="mt-2 w-full max-w-[85%] bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800 font-semibold">❌ No jobs found in {msg.location}</p>
-                    <p className="text-xs text-yellow-700 mt-2">The chatbot couldn't find any matching positions. Try searching in other locations or adjusting your criteria!</p>
-                  </div>
-                ) : null}
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-base">AI Career Assistant</h3>
+                  <p className="text-sm text-white/90">
+                    {user ? `Welcome ${user.fullname?.split(' ')[0]}! 👋` : 'Powered by AI 🤖'}
+                  </p>
                 </div>
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
               <button
-                onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 transition"
-                aria-label="Send message"
+                onClick={() => setIsOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                aria-label="Close chat"
               >
-                <Send size={20} />
+                <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.role === 'assistant' && (
+                    <div className="w-8 h-8 bg-[#6A38C2] rounded-full flex items-center justify-center flex-shrink-0 mr-3">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
+                  <div className={`max-w-[85%] ${msg.role === 'user' ? 'order-1' : ''}`}>
+                    {/* Message bubble */}
+                    <div className={`rounded-2xl px-4 py-3 ${
+                      msg.role === 'user'
+                        ? 'bg-[#6A38C2] text-white ml-auto'
+                        : 'bg-white text-gray-800 border border-gray-200'
+                    }`}>
+                      <MessageContent content={msg.content} />
+                      
+                      {/* Message metadata */}
+                      {msg.role === 'assistant' && (
+                        <div className="flex items-center gap-2 mt-2 text-xs">
+                          <span className="text-gray-500">
+                            {msg.timestamp.toLocaleTimeString()}
+                          </span>
+                          {msg.source && (
+                            <Badge variant="secondary" className="text-xs">
+                              {msg.source === 'ai-powered' ? '🤖 AI' : 
+                               msg.source === 'rule-based' ? '📋 Rules' : '⚡ Quick'}
+                            </Badge>
+                          )}
+                          {msg.intent && msg.confidence && (
+                            <Badge variant="outline" className="text-xs">
+                              {msg.intent} ({Math.round(msg.confidence * 100)}%)
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Job Results */}
+                    {msg.jobs?.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <div className="text-xs font-medium text-gray-600">🔍 Found {msg.jobs.length} job{msg.jobs.length > 1 ? 's' : ''}</div>
+                        {msg.jobs.slice(0, 3).map((job, jobIndex) => (
+                          <JobCard key={jobIndex} job={job} />
+                        ))}
+                        {msg.jobs.length > 3 && (
+                          <button 
+                            onClick={() => navigate('/jobs')}
+                            className="text-xs text-blue-500 hover:underline font-medium"
+                          >
+                            View all {msg.jobs.length} jobs →
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Suggestions */}
+                    {msg.suggestions?.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <div className="text-xs font-medium text-purple-600">💡 Quick Actions:</div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {msg.suggestions.slice(0, 4).map((suggestion, suggestionIdx) => {
+                            const suggestionText = typeof suggestion === 'string' 
+                              ? suggestion 
+                              : suggestion?.message || suggestion?.text || 'Click to explore';
+                            const suggestionAction = typeof suggestion === 'object' 
+                              ? suggestion?.action 
+                              : null;
+                            
+                            return (
+                              <button
+                                key={suggestionIdx}
+                                onClick={() => {
+                                  if (suggestionAction) {
+                                    // Handle action-based suggestions
+                                    if (suggestionAction === 'navigate' && suggestion.link) {
+                                      navigate(suggestion.link);
+                                    } else if (suggestionAction === 'search' && suggestion.query) {
+                                      setInput(suggestion.query);
+                                    }
+                                  } else {
+                                    // Handle text-based suggestions
+                                    setInput(suggestionText);
+                                  }
+                                }}
+                                className="text-left p-3 bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50 rounded-lg text-purple-700 text-xs transition-all duration-200 font-medium"
+                              >
+                                {suggestionText}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {msg.role === 'user' && (
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 ml-3">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {/* Typing indicator */}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="w-8 h-8 bg-[#6A38C2] rounded-full flex items-center justify-center flex-shrink-0 mr-3">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#6A38C2]" />
+                    <span className="text-sm text-gray-600">AI is thinking...</span>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t bg-white sm:rounded-b-2xl">
+              <div className="flex gap-3">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask about jobs, career advice, or anything..."
+                  className="flex-1 resize-none border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6A38C2] focus:border-transparent transition-colors"
+                  rows={1}
+                  style={{ maxHeight: '120px' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  }}
+                  disabled={isLoading}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={isLoading || !input.trim()}
+                  className="bg-[#6A38C2] hover:bg-[#5b30a6] disabled:bg-gray-300 text-white rounded-xl px-4 py-3 transition-colors flex-shrink-0 flex items-center justify-center"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -236,6 +236,193 @@ const emailTemplates = {
     `,
   }),
 
+  // Interview scheduled email
+  interviewScheduledEmail: (candidateName, jobTitle, interview) => ({
+    subject: `📅 Interview Scheduled: ${jobTitle}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+          .content { padding: 30px; color: #333333; line-height: 1.6; }
+          .interview-details { background-color: #e3f2fd; padding: 25px; border-left: 4px solid #2196f3; margin: 25px 0; border-radius: 8px; }
+          .preparation { background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .important-note { background-color: #fce4ec; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #e91e63; }
+          .button { display: inline-block; padding: 15px 35px; background-color: #2196f3; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📅 Interview Scheduled!</h1>
+            <h2>Get Ready to Shine!</h2>
+          </div>
+          <div class="content">
+            <h2>Dear ${candidateName},</h2>
+            <p>Great news! Your interview has been scheduled for the <strong>${jobTitle}</strong> position. We're looking forward to meeting with you!</p>
+            
+            <div class="interview-details">
+              <h3>📋 Interview Details</h3>
+              <p><strong>📅 Date & Time:</strong> ${new Date(interview.scheduledDate).toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</p>
+              <p><strong>⏱️ Duration:</strong> ${interview.duration} minutes</p>
+              <p><strong>🎥 Type:</strong> ${interview.type === 'video' ? '🎥 Video Call' : interview.type === 'phone' ? '📞 Phone Call' : '🏢 In-Person'}</p>
+              ${interview.meetingLink ? `<p><strong>🔗 Meeting Link:</strong> <a href="${interview.meetingLink}" style="color: #2196f3;">${interview.meetingLink}</a></p>` : ''}
+              ${interview.location ? `<p><strong>📍 Location:</strong> ${interview.location}</p>` : ''}
+              <p><strong>🏢 Company:</strong> ${interview.company || 'Company Name'}</p>
+            </div>
+            
+            ${interview.preparationInstructions ? `
+              <div class="preparation">
+                <h3>📚 Interview Preparation</h3>
+                <p>${interview.preparationInstructions}</p>
+              </div>
+            ` : ''}
+            
+            ${interview.requiredDocuments && interview.requiredDocuments.length > 0 ? `
+              <div class="important-note">
+                <h3>📄 Required Documents</h3>
+                <p>Please bring the following documents:</p>
+                <ul>
+                  ${interview.requiredDocuments.map(doc => `<li>${doc}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${interview.technicalRequirements && interview.technicalRequirements.length > 0 ? `
+              <div class="preparation">
+                <h3>💻 Technical Requirements</h3>
+                <ul>
+                  ${interview.technicalRequirements.map(req => `<li>${req}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            <div class="important-note">
+              <h3>⚠️ Important Reminders</h3>
+              <ul>
+                <li>✅ Please confirm your attendance by replying to this email</li>
+                <li>⏰ Join the meeting 5-10 minutes early</li>
+                <li>📞 Contact us immediately if you need to reschedule</li>
+                <li>💼 Come prepared with questions about the role and company</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/student/interviews" class="button">View Interview Details</a>
+            </div>
+            
+            <p>We're excited to learn more about you and discuss how you can contribute to our team!</p>
+            
+            <p>Best of luck with your preparation!</p>
+            
+            <p>Best regards,<br><strong>Hiring Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+            <p>&copy; 2025 Job Portal. Your career success partner.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  // Job offer email
+  jobOfferEmail: (candidateName, jobTitle, companyName) => ({
+    subject: `🎉 Job Offer: ${jobTitle} at ${companyName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 40px; text-align: center; }
+          .content { padding: 30px; color: #333333; line-height: 1.6; }
+          .offer-details { background-color: #d4edda; padding: 25px; border-left: 4px solid #28a745; margin: 25px 0; border-radius: 8px; }
+          .celebration { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+          .next-steps { background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .button { display: inline-block; padding: 15px 35px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Congratulations!</h1>
+            <h2>You've Got the Job!</h2>
+          </div>
+          <div class="content">
+            <div class="celebration">
+              <h2>🎊 Welcome to the Team! 🎊</h2>
+            </div>
+            
+            <h2>Dear ${candidateName},</h2>
+            <p>We are thrilled to extend this job offer to you! After careful consideration of your qualifications, experience, and interview performance, we are confident that you will be a valuable addition to our team.</p>
+            
+            <div class="offer-details">
+              <h3>🏢 Job Offer Details</h3>
+              <p><strong>Position:</strong> ${jobTitle}</p>
+              <p><strong>Company:</strong> ${companyName}</p>
+              <p><strong>Interview Status:</strong> ✅ Successfully Completed</p>
+              <p><strong>Decision:</strong> <span style="color: #28a745; font-weight: bold;">SELECTED</span></p>
+            </div>
+            
+            <div class="next-steps">
+              <h3>📋 Next Steps</h3>
+              <p>Our HR team will contact you within <strong>24-48 hours</strong> with:</p>
+              <ul>
+                <li>📄 Formal offer letter with complete terms</li>
+                <li>💰 Detailed compensation package</li>
+                <li>📅 Proposed start date</li>
+                <li>📋 Onboarding documentation</li>
+                <li>🏢 Office location and reporting details</li>
+              </ul>
+            </div>
+            
+            <p><strong>What impressed us about you:</strong></p>
+            <ul>
+              <li>✨ Exceptional technical skills and problem-solving abilities</li>
+              <li>💪 Strong communication and teamwork capabilities</li>
+              <li>🎯 Perfect cultural fit with our company values</li>
+              <li>🚀 Enthusiasm and passion for the role</li>
+            </ul>
+            
+            <div style="text-align: center;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/student/applications" class="button">View Application Status</a>
+            </div>
+            
+            <p>We're excited to have you join us and look forward to working together!</p>
+            
+            <p>If you have any questions, please don't hesitate to reach out.</p>
+            
+            <p>Warm regards,<br><strong>${companyName} Hiring Team</strong></p>
+            
+            <div class="celebration">
+              <p style="font-size: 18px; margin: 0;">🌟 Welcome to your new career journey! 🌟</p>
+            </div>
+          </div>
+          <div class="footer">
+            <p>&copy; 2025 Job Portal. Your career success partner.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
   // Application status update
   // Application status update
   applicationStatusUpdate: (candidateName, jobTitle, status, message = '') => {

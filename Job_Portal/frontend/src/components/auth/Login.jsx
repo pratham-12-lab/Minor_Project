@@ -111,6 +111,11 @@ const Login = () => {
         dispatch(setUser(res.data.user));
         localStorage.setItem('user', JSON.stringify(res.data.user));
         
+        // Store token in localStorage for services that need it
+        if (res.data.token) {
+          localStorage.setItem('token', res.data.token);
+        }
+        
         const userRole = res.data.user.role;
         const verificationStatus = res.data.user.verificationStatus;
         

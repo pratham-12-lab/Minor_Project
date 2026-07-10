@@ -13,7 +13,7 @@ const applicationSchema = new mongoose.Schema({
     },
     status:{
         type:String,
-        enum:['pending', 'accepted', 'rejected'],
+        enum:['pending', 'accepted', 'rejected', 'interview-scheduled', 'interview-completed', 'on-hold', 'selected', 'under-review'],
         default:'pending'
     },
     feedback:{
@@ -23,6 +23,12 @@ const applicationSchema = new mongoose.Schema({
     rejectionReason:{
         type:String,
         default:''
+    },
+    selectionDate:{
+        type:Date
+    },
+    interviewFeedback:{
+        type:mongoose.Schema.Types.Mixed
     }
 },{timestamps:true});
 

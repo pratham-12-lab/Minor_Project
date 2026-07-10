@@ -48,8 +48,35 @@ const PostJob = () => {
 
     const submitHandler = async (e) => {
         e.preventDefault();
+        
+        // Validate required fields before submitting
+        const requiredFields = {
+            title: input.title?.trim(),
+            description: input.description?.trim(),
+            requirements: input.requirements?.trim(),
+            salary: input.salary?.toString()?.trim(),
+            location: input.location?.trim(),
+            jobType: input.jobType?.trim(),
+            experience: input.experience?.trim(),
+            position: input.position,
+            companyId: input.companyId?.trim()
+        };
+
+        const missingFields = Object.entries(requiredFields)
+            .filter(([key, value]) => !value || (key === 'position' && (!value || value <= 0)))
+            .map(([key]) => key);
+
+        if (missingFields.length > 0) {
+            toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+            console.log('Missing fields:', missingFields);
+            console.log('Form data:', requiredFields);
+            return;
+        }
+
         try {
             setLoading(true);
+            console.log('Submitting job data:', input);
+            
             let res;
             if (isEdit) {
                 // Update existing job (backend should expose this endpoint)
@@ -73,8 +100,14 @@ const PostJob = () => {
                 navigate('/admin/jobs');
             }
         } catch (error) {
+            console.error('Job submission error:', error);
             const msg = error?.response?.data?.message || error.message || 'Something went wrong';
             toast.error(msg);
+            
+            // Log more details for debugging
+            if (error?.response?.data) {
+                console.log('Server response:', error.response.data);
+            }
         } finally {
             setLoading(false);
         }
@@ -186,24 +219,43 @@ const PostJob = () => {
 
                         <div className='mb-4'>
                             <Label className='mb-2 block font-medium text-gray-700'>Job Type</Label>
-                            <Input
-                                type="text"
-                                name="jobType"
-                                value={input.jobType}
-                                onChange={changeEventHandler}
-                                className="focus-visible:ring-offset-0 focus-visible:ring-0 transition-all duration-300 hover:border-blue-400 focus:ring-blue-500"
-                            />
+                            <Select 
+                                value={input.jobType || ""} 
+                                onValueChange={(value) => setInput({...input, jobType: value})}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Job Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="Full-time">Full-time</SelectItem>
+                                        <SelectItem value="Part-time">Part-time</SelectItem>
+                                        <SelectItem value="Contract">Contract</SelectItem>
+                                        <SelectItem value="Internship">Internship</SelectItem>
+                                        <SelectItem value="Remote">Remote</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className='mb-4'>
                             <Label className='mb-2 block font-medium text-gray-700'>Experience Level</Label>
-                            <Input
-                                type="text"
-                                name="experience"
-                                value={input.experience}
-                                onChange={changeEventHandler}
-                                className="focus-visible:ring-offset-0 focus-visible:ring-0 transition-all duration-300 hover:border-blue-400 focus:ring-blue-500"
-                            />
+                            <Select 
+                                value={input.experience || ""} 
+                                onValueChange={(value) => setInput({...input, experience: value})}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Experience Level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="Entry-level">Entry-level</SelectItem>
+                                        <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                        <SelectItem value="Senior">Senior</SelectItem>
+                                        <SelectItem value="Executive">Executive</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className='mb-4'>
@@ -221,7 +273,7 @@ const PostJob = () => {
                             companies.length > 0 && (
                                 <div className='mb-4'>
                                     <Label className='mb-2 block font-medium text-gray-700'>Company</Label>
-                                    <Select value={selectedCompanyValue} onValueChange={selectChangeHandler}>
+                                    <Select value={selectedCompanyValue || ""} onValueChange={selectChangeHandler}>
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select a Company" />
                                         </SelectTrigger>

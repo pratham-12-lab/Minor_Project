@@ -1,0 +1,910 @@
+openapi: 3.0.0
+info:
+  title: Job Portal API
+  description: Comprehensive REST API for job posting, applications, and AI-powered features
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@jobportal.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.jobportal.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User registration, login, and authentication
+  - name: Users
+    description: User profile management
+  - name: Jobs
+    description: Job posting and management
+  - name: Applications
+    description: Job applications and status tracking
+  - name: Companies
+    description: Company profiles and management
+  - name: Analytics
+    description: Platform analytics and insights
+  - name: AI Chatbot
+    description: AI-powered assistance and guidance
+  - name: Saved Jobs
+    description: Job saving and alerts
+  - name: Admin
+    description: Administrative functions
+
+paths:
+  # ============ AUTHENTICATION ============
+  /users/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      description: Creates a new user account with role-based permissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request - validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate user
+      description: Login user and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUser'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized - invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      description: Clear authentication token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+
+  # ============ USERS ============
+  /users/profile:
+    get:
+      tags: [Users]
+      summary: Get user profile
+      description: Retrieve current user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags: [Users]
+      summary: Update user profile
+      description: Update user profile information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateProfile'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  # ============ JOBS ============
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: Get all jobs
+      description: Retrieve paginated list of jobs with filtering
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+          description: Items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search in title/description
+        - in: query
+          name: location
+          schema:
+            type: string
+          description: Filter by location
+        - in: query
+          name: jobType
+          schema:
+            type: string
+            enum: [Full-time, Part-time, Contract, Internship, Remote]
+          description: Filter by job type
+      responses:
+        '200':
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobList'
+
+    post:
+      tags: [Jobs]
+      summary: Create job posting
+      description: Create a new job posting (Recruiter/Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJob'
+      responses:
+        '201':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+
+  /jobs/{id}:
+    get:
+      tags: [Jobs]
+      summary: Get job by ID
+      description: Retrieve detailed job information
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Job ID
+      responses:
+        '200':
+          description: Job retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+
+    put:
+      tags: [Jobs]
+      summary: Update job
+      description: Update job posting (Owner/Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Job ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJob'
+      responses:
+        '200':
+          description: Job updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+
+    delete:
+      tags: [Jobs]
+      summary: Delete job
+      description: Delete job posting (Owner/Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Job ID
+      responses:
+        '200':
+          description: Job deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Job deleted successfully
+
+  # ============ APPLICATIONS ============
+  /applications:
+    post:
+      tags: [Applications]
+      summary: Apply for job
+      description: Submit application for a job
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateApplication'
+      responses:
+        '201':
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationResponse'
+
+  /applications/my-applications:
+    get:
+      tags: [Applications]
+      summary: Get user applications
+      description: Retrieve user's job applications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Applications retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationList'
+
+  # ============ AI CHATBOT ============
+  /chatbot/message:
+    post:
+      tags: [AI Chatbot]
+      summary: Send message to chatbot
+      description: Get AI-powered assistance and guidance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+      responses:
+        '200':
+          description: Chatbot response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  # ============ HEALTH & SECURITY ============
+  /:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check API status and security configuration
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+
+  /security/check:
+    get:
+      tags: [Health]
+      summary: Security check
+      description: Check security status and get recommendations
+      responses:
+        '200':
+          description: Security status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityCheck'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    # ============ AUTHENTICATION ============
+    RegisterUser:
+      type: object
+      required:
+        - fullname
+        - email
+        - phoneNumber
+        - password
+        - role
+      properties:
+        fullname:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        phoneNumber:
+          type: string
+          pattern: '^[0-9]{10}$'
+          example: '1234567890'
+        password:
+          type: string
+          minLength: 8
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]'
+          example: SecurePass123!
+        role:
+          type: string
+          enum: [student, recruiter, admin]
+          example: student
+        companyName:
+          type: string
+          maxLength: 200
+          example: Tech Corp
+        companyWebsite:
+          type: string
+          format: uri
+          example: https://techcorp.com
+
+    LoginUser:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          example: SecurePass123!
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: User registered successfully
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: JWT token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    # ============ USERS ============
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 507f1f77bcf86cd799439011
+        fullname:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: john@example.com
+        role:
+          type: string
+          example: student
+        isVerified:
+          type: boolean
+          example: true
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/AuthResponse'
+        - type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                fullname:
+                  type: string
+                email:
+                  type: string
+                phoneNumber:
+                  type: string
+                role:
+                  type: string
+                isVerified:
+                  type: boolean
+                skills:
+                  type: array
+                  items:
+                    type: string
+                bio:
+                  type: string
+                profilePhoto:
+                  type: string
+
+    UpdateProfile:
+      type: object
+      properties:
+        fullname:
+          type: string
+          example: Updated Name
+        phoneNumber:
+          type: string
+          example: '9876543210'
+        bio:
+          type: string
+          example: Experienced developer...
+        skills:
+          type: string
+          example: JavaScript,React,Node.js
+        profilePhoto:
+          type: string
+          format: binary
+          description: Profile image file
+
+    # ============ JOBS ============
+    CreateJob:
+      type: object
+      required:
+        - title
+        - description
+        - requirements
+        - salary
+        - location
+        - jobType
+        - experience
+        - position
+        - companyId
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+          example: Software Developer
+        description:
+          type: string
+          minLength: 20
+          maxLength: 5000
+          example: We are looking for a skilled developer...
+        requirements:
+          type: string
+          minLength: 5
+          maxLength: 2000
+          example: JavaScript, React, Node.js, MongoDB
+        salary:
+          type: number
+          minimum: 0
+          maximum: 1000000
+          example: 80000
+        location:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: Remote
+        jobType:
+          type: string
+          enum: [Full-time, Part-time, Contract, Internship, Remote]
+          example: Full-time
+        experience:
+          type: string
+          enum: [Entry-level, Mid-level, Senior, Executive]
+          example: Mid-level
+        position:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Software Engineer
+        companyId:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+
+    UpdateJob:
+      allOf:
+        - $ref: '#/components/schemas/CreateJob'
+        - type: object
+          properties: {}
+
+    JobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Job posted successfully
+        job:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            status:
+              type: string
+              example: active
+
+    JobList:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/JobItem'
+            total:
+              type: integer
+              example: 100
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            totalPages:
+              type: integer
+              example: 10
+
+    JobItem:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        requirements:
+          type: array
+          items:
+            type: string
+        salary:
+          type: number
+        location:
+          type: string
+        jobType:
+          type: string
+        experienceLevel:
+          type: string
+        position:
+          type: string
+        company:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            logo:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        applications:
+          type: integer
+
+    JobDetail:
+      allOf:
+        - type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            job:
+              $ref: '#/components/schemas/JobItem'
+
+    # ============ APPLICATIONS ============
+    CreateApplication:
+      type: object
+      required:
+        - jobId
+        - resume
+      properties:
+        jobId:
+          type: string
+          description: Job ID to apply for
+          example: 507f1f77bcf86cd799439011
+        coverLetter:
+          type: string
+          description: Optional cover letter
+          example: I am excited to apply for this position...
+        resume:
+          type: string
+          format: binary
+          description: Resume file (PDF/DOC/DOCX)
+
+    ApplicationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Application submitted successfully
+        application:
+          type: object
+          properties:
+            id:
+              type: string
+            jobId:
+              type: string
+            status:
+              type: string
+              example: pending
+            appliedAt:
+              type: string
+              format: date-time
+
+    ApplicationList:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApplicationItem'
+            total:
+              type: integer
+            page:
+              type: integer
+            limit:
+              type: integer
+
+    ApplicationItem:
+      type: object
+      properties:
+        id:
+          type: string
+        job:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            company:
+              type: string
+        status:
+          type: string
+        appliedAt:
+          type: string
+          format: date-time
+        coverLetter:
+          type: string
+        resumeUrl:
+          type: string
+
+    # ============ AI CHATBOT ============
+    ChatMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: How do I apply for jobs?
+        userId:
+          type: string
+          example: 507f1f77bcf86cd799439011
+        userRole:
+          type: string
+          example: student
+        conversationHistory:
+          type: array
+          items:
+            type: string
+
+    ChatResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        reply:
+          type: string
+          example: To apply for jobs:\n1. Browse available jobs...
+        suggestions:
+          type: array
+          items:
+            type: string
+
+    # ============ HEALTH & SECURITY ============
+    HealthCheck:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ✅ Job Portal API is running
+        version:
+          type: string
+          example: 1.0.0
+        environment:
+          type: string
+          example: development
+        timestamp:
+          type: string
+          format: date-time
+        security:
+          type: object
+          properties:
+            headers:
+              type: string
+              example: enabled
+            rateLimiting:
+              type: string
+              example: enabled
+            sanitization:
+              type: string
+              example: enabled
+            cors:
+              type: string
+              example: enabled
+
+    SecurityCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          example: secure
+        checks:
+          type: object
+          properties:
+            headers:
+              type: boolean
+              example: true
+            rateLimiting:
+              type: boolean
+              example: true
+            sanitization:
+              type: boolean
+              example: true
+            cors:
+              type: boolean
+              example: true
+            https:
+              type: boolean
+              example: false
+            timestamp:
+              type: string
+              format: date-time
+        recommendations:
+          type: array
+          items:
+            type: string
+
+    # ============ ERRORS ============
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error description
+        error:
+          type: string
+          example: Detailed error message (development only)
+        timestamp:
+          type: string
+          format: date-time
+          example: 2024-01-15T10:30:00Z
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string

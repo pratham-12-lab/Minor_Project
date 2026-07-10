@@ -31,6 +31,19 @@ const JobDescription = () => {
     const dispatch = useDispatch();
 
     const applyJobHandler = async () => {
+        // Check if user is authenticated
+        if (!user) {
+            toast.error('Please login to apply for jobs');
+            navigate('/login');
+            return;
+        }
+        
+        // Check if user is a student/seeker
+        if (user.role !== 'student') {
+            toast.error('Only job seekers can apply for jobs');
+            return;
+        }
+
         try {
             const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, {withCredentials:true});
             
@@ -103,15 +116,22 @@ const JobDescription = () => {
                             </div>
                             <div className='flex flex-col gap-3'>
                                 <Button
-                                    onClick={hasActiveApplication ? null : applyJobHandler}
-                                    disabled={hasActiveApplication}
+                                    onClick={!user ? () => { toast.error('Please login to apply for jobs'); navigate('/login'); } : hasActiveApplication ? null : applyJobHandler}
+                                    disabled={user && hasActiveApplication}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                                        hasActiveApplication
+                                        user && hasActiveApplication
                                             ? 'bg-gray-600 cursor-not-allowed'
                                             : 'bg-white text-blue-600 hover:bg-blue-50'
                                     }`}
                                 >
-                                    {hasActiveApplication ? '✓ Already Applied' : hasRejectedApplication ? 'Reapply Now' : 'Apply Now'}
+                                    {!user 
+                                        ? '🔒 Login to Apply'
+                                        : hasActiveApplication 
+                                        ? '✓ Already Applied' 
+                                        : hasRejectedApplication 
+                                        ? 'Reapply Now' 
+                                        : 'Apply Now'
+                                    }
                                 </Button>
                                 <Button
                                     onClick={() => navigate(`/analytics/${jobId}`)}
