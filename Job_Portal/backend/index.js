@@ -49,6 +49,11 @@ connectDB();
 
 const app = express();
 
+// ✅ Trust proxy for Render deployment
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // ========================
