@@ -12,8 +12,8 @@ import NotificationBell from '../NotificationBell';
 import NotificationCenter from '../NotificationCenter';
 import SocketIndicator from '../SocketIndicator';
 
-// ✅ Updated API constant
-const USER_API_END_POINT = `${import.meta.env.VITE_API_BASE_URL}/users`;
+// ✅ Updated API constant with proper fallback
+const USER_API_END_POINT = `${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/users`;
 
 const Navbar = () => {
     const { user } = useSelector(store => store.auth);
