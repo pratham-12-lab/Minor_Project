@@ -54,17 +54,28 @@ Job_Portal/
    - Click "New +" → "Web Service"
    - Connect GitHub repository
    - Select your job portal repository
-   - Choose "Backend" as root directory
+   - ⚠️ **IMPORTANT:** Do NOT set root directory to "./backend"
 
 2. **Configure Backend Settings:**
    ```
    Name: job-portal-backend
    Environment: Node
-   Region: Oregon (US West) or closest to you
+   Region: Singapore (Southeast Asia) or closest to you
    Branch: main
-   Root Directory: backend
-   Build Command: npm install
-   Start Command: node index.js
+   Root Directory: backend (NO quotes, NO ./ prefix)
+   Build Command: npm ci --only=production
+   Start Command: npm start
+   ```
+
+3. **Alternative Configuration (if Root Directory fails):**
+   ```
+   Name: job-portal-backend
+   Environment: Node
+   Region: Singapore (Southeast Asia)
+   Branch: main
+   Root Directory: (leave empty)
+   Build Command: cd backend && npm ci --only=production
+   Start Command: cd backend && npm start
    ```
 
 3. **Set Environment Variables:**

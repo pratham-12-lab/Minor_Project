@@ -4,8 +4,8 @@ services:
     name: job-portal-backend
     env: node
     plan: starter
-    region: oregon
-    rootDir: ./backend
+    region: singapore
+    rootDir: backend
     buildCommand: npm ci --only=production
     startCommand: npm start
     envVars:
@@ -24,10 +24,10 @@ services:
     name: job-portal-frontend
     env: static
     plan: free
-    region: oregon
-    rootDir: ./frontend
+    region: singapore
+    rootDir: frontend
     buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*

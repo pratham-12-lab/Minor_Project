@@ -608,6 +608,245 @@ module.exports = {
    GEMINI_API_KEY=your_gemini_api_key
    ```
 
+### 🚨 Common Deployment Issues & Solutions
+
+#### ❌ Root Directory Error: "backend" does not exist
+
+**Error:** `Root directory "backend" does not exist`
+
+**Solutions:**
+1. **Fix render.yaml configuration:**
+   ```yaml
+   # ✅ CORRECT
+   services:
+     - type: web
+       rootDir: backend  # No leading ./ or quotes
+   
+   # ❌ INCORRECT
+   rootDir: ./backend
+   rootDir: "backend"
+   ```
+
+2. **Manual Service Configuration:**
+   - Go to Render Dashboard
+   - Click on your service
+   - Go to "Settings" → "Build & Deploy"
+   - Set Root Directory to: `backend` (no quotes, no ./)
+
+3. **Alternative: No Root Directory**
+   ```yaml
+   # If structure is flat, don't specify rootDir
+   services:
+     - type: web
+       buildCommand: cd backend && npm ci
+       startCommand: cd backend && npm start
+   ```
+
+#### ❌ Build Command Failures
+
+**Error:** `Build failed` or `npm install failed`
+
+**Solutions:**
+1. **Check Node.js version compatibility:**
+   ```yaml
+   # Add to render.yaml
+   services:
+     - type: web
+       env: node
+       node: 18.20.4  # Specify exact version
+   ```
+
+2. **Fix package.json scripts:**
+   ```json
+   {
+     "scripts": {
+       "start": "node index.js",
+       "build": "echo 'No build step required for Node.js'"
+     }
+   }
+   ```
+
+3. **Use production dependencies only:**
+   ```yaml
+   buildCommand: npm ci --only=production
+   ```
+
+#### ❌ Environment Variables Not Working
+
+**Error:** `Cannot connect to database` or `API keys undefined`
+
+**Solutions:**
+1. **Add variables in Render Dashboard:**
+   - Go to service → Environment
+   - Add each variable individually
+   - Click "Save Changes"
+
+2. **Check variable names match exactly:**
+   ```javascript
+   // Backend code should use exact names
+   const mongoUri = process.env.MONGO_URI; // Not MONGODB_URI
+   ```
+
+3. **Verify sensitive variables are set:**
+   ```bash
+   # Required variables checklist
+   MONGO_URI=mongodb+srv://...
+   JWT_SECRET=auto-generated-by-render
+   CLOUDINARY_CLOUD_NAME=your_name
+   CLOUDINARY_API_KEY=your_key
+   CLOUDINARY_API_SECRET=your_secret
+   GEMINI_API_KEY=your_key
+   ```
+
+#### ❌ Database Connection Issues
+
+**Error:** `MongoNetworkError` or `Connection timeout`
+
+**Solutions:**
+1. **Whitelist Render IPs in MongoDB Atlas:**
+   ```bash
+   # In MongoDB Atlas:
+   # Network Access → Add IP Address → 0.0.0.0/0
+   # Or add specific Render IPs if provided
+   ```
+
+2. **Check connection string format:**
+   ```bash
+   # ✅ CORRECT FORMAT
+   mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+   
+   # ❌ Common mistakes
+   - Missing database name
+   - Special characters not URL encoded
+   - Wrong cluster URL
+   ```
+
+3. **Test connection locally first:**
+   ```javascript
+   // Test script
+   const mongoose = require('mongoose');
+   mongoose.connect(process.env.MONGO_URI)
+     .then(() => console.log('✅ Connected'))
+     .catch(err => console.error('❌ Failed:', err));
+   ```
+
+#### ❌ Frontend Build Issues
+
+**Error:** `Build failed` for static site
+
+**Solutions:**
+1. **Check build command:**
+   ```yaml
+   # Correct frontend configuration
+   services:
+     - type: web
+       env: static
+       buildCommand: npm ci && npm run build
+       staticPublishPath: dist  # Not ./dist or /dist
+   ```
+
+2. **Verify Vite configuration:**
+   ```javascript
+   // vite.config.js
+   export default {
+     build: {
+       outDir: 'dist',  // Must match staticPublishPath
+       assetsDir: 'assets'
+     }
+   }
+   ```
+
+3. **Check environment variables:**
+   ```bash
+   # Frontend environment variables
+   VITE_API_URL=https://your-backend.onrender.com
+   ```
+
+#### ❌ CORS Issues After Deployment
+
+**Error:** `Access to fetch blocked by CORS policy`
+
+**Solutions:**
+1. **Update backend CORS configuration:**
+   ```javascript
+   // backend/index.js
+   app.use(cors({
+     origin: [
+       'http://localhost:5173',
+       'https://your-frontend.onrender.com'
+     ],
+     credentials: true
+   }));
+   ```
+
+2. **Set correct FRONTEND_URL:**
+   ```bash
+   # In Render backend environment
+   FRONTEND_URL=https://your-frontend.onrender.com
+   ```
+
+#### ❌ Service Won't Start
+
+**Error:** `Service failed to start` or `Port binding failed`
+
+**Solutions:**
+1. **Use dynamic PORT:**
+   ```javascript
+   // backend/index.js
+   const PORT = process.env.PORT || 8000;
+   server.listen(PORT, '0.0.0.0', () => {
+     console.log(`Server running on port ${PORT}`);
+   });
+   ```
+
+2. **Check health check endpoint:**
+   ```javascript
+   // Ensure / endpoint exists and returns 200
+   app.get('/', (req, res) => {
+     res.status(200).json({ message: 'Server is running' });
+   });
+   ```
+
+### 🔧 Deployment Debugging Tools
+
+#### 1. **Check Render Logs**
+```bash
+# Access logs in Render Dashboard
+# Go to Service → Logs tab
+# Look for specific error messages
+```
+
+#### 2. **Test Locally First**
+```bash
+# Test production build locally
+NODE_ENV=production npm start
+
+# Test with production environment
+cp .env.production .env
+npm start
+```
+
+#### 3. **Verify File Structure**
+```bash
+# Ensure correct structure
+Job_Portal/
+├── backend/
+│   ├── package.json
+│   └── index.js
+├── frontend/
+│   ├── package.json
+│   └── dist/ (after build)
+└── render.yaml
+```
+
+### 💡 Pro Deployment Tips
+
+1. **Use Starter Plan:** Free tier has limitations (sleeps after 15 min)
+2. **Monitor Resources:** Check CPU/Memory usage in dashboard
+3. **Enable Auto-Deploy:** Automatically deploy on Git push
+4. **Set Up Alerts:** Get notified of deployment failures
+5. **Use Environment-Specific Config:** Different settings for dev/prod
+
 ### 🐳 Docker Deployment
 
 ```bash
