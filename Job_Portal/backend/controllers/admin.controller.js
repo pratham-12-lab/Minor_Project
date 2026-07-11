@@ -36,9 +36,35 @@ export const getAllEmployers = async (req, res) => {
             query.verificationStatus = status;
         }
 
+        // 🔍 DEBUG: Log the query being executed
+        console.log('🔍 Admin query:', JSON.stringify(query));
+
         const employers = await User.find(query)
             .select('-password')
             .sort({ createdAt: -1 });
+
+        // 🔍 DEBUG: Log what we found
+        console.log(`🔍 Found ${employers.length} employers for query:`, JSON.stringify(query));
+        if (employers.length > 0) {
+            console.log('🔍 First employer:', {
+                id: employers[0]._id,
+                email: employers[0].email,
+                role: employers[0].role,
+                verificationStatus: employers[0].verificationStatus
+            });
+        }
+
+        // 🔍 DEBUG: Also check ALL users with role recruiter regardless of status
+        const allRecruiters = await User.find({ role: 'recruiter' }).select('email role verificationStatus createdAt');
+        console.log(`🔍 Total recruiters in database: ${allRecruiters.length}`);
+        allRecruiters.forEach(rec => {
+            console.log('🔍 Recruiter:', {
+                email: rec.email,
+                role: rec.role,
+                verificationStatus: rec.verificationStatus,
+                createdAt: rec.createdAt
+            });
+        });
 
         return res.status(200).json({
             success: true,
