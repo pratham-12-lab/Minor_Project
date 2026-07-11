@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js __tests__/smoke.test.js --coverage --testTimeout=30000",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js __tests__/smoke.test.js --watch",
