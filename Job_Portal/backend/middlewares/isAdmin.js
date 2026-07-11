@@ -8,12 +8,23 @@ import { User } from "../models/user.model.js";
  */
 const isAdmin = async (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        // Check for token in cookies first, then in Authorization header
+        let token = req.cookies.token;
+        
+        // If no token in cookies, check Authorization header
+        if (!token) {
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7); // Remove 'Bearer ' prefix
+            }
+        }
         
         // 🔍 DEBUG: Log authentication attempt
         console.log('🔍 Admin auth attempt:', {
             hasToken: !!token,
             tokenLength: token ? token.length : 0,
+            hasCookieToken: !!req.cookies.token,
+            hasAuthHeader: !!req.headers.authorization,
             cookies: Object.keys(req.cookies || {}),
             userAgent: req.headers['user-agent']?.substring(0, 50)
         });
