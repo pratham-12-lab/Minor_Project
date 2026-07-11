@@ -27,7 +27,9 @@ const AdminDashboard = () => {
     const fetchEmployers = async () => {
         setLoading(true);
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.get(`${ADMIN_API}/employers?status=${filter}`, {
+                headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true
             });
             if (res.data.success) {
@@ -43,10 +45,14 @@ const AdminDashboard = () => {
 
     const handleApprove = async (employerId, employerName) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.post(
                 `${ADMIN_API}/employers/${employerId}/approve`,
                 {},
-                { withCredentials: true }
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true
+                }
             );
             if (res.data.success) {
                 toast.success(`${employerName} approved successfully!`);
@@ -63,10 +69,14 @@ const AdminDashboard = () => {
         if (!reason) return;
 
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.post(
                 `${ADMIN_API}/employers/${employerId}/reject`,
                 { reason },
-                { withCredentials: true }
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true
+                }
             );
             if (res.data.success) {
                 toast.success(`${employerName} rejected`);
