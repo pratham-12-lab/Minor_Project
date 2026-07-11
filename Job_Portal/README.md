@@ -4,7 +4,7 @@
 
 ![Job Portal Banner](https://via.placeholder.com/800x200/4F46E5/FFFFFF?text=Job+Portal+-+Your+Career+Gateway)
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yourusername/job-portal)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/pratham-12-lab/Minor_Project)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?logo=mongodb&logoColor=white)](https://mongodb.com)
@@ -13,7 +13,7 @@
 
 **A modern, AI-powered job portal connecting talented professionals with their dream careers**
 
-[🚀 Live Demo](https://job-portal-frontend.onrender.com) · [📖 Documentation](docs/) · [🐛 Report Bug](issues) · [💡 Request Feature](issues)
+[🚀 Live Demo](https://job-portal-frontend-2du2.onrender.com/) · [📖 Documentation](docs/) · [🐛 Report Bug](https://github.com/pratham-12-lab/Minor_Project/issues) · [💡 Request Feature](https://github.com/pratham-12-lab/Minor_Project/issues)
 
 </div>
 
@@ -181,8 +181,8 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/job-portal.git
-cd job-portal
+git clone https://github.com/pratham-12-lab/Minor_Project.git
+cd Minor_Project
 
 # Run automated setup (Windows)
 .\setup-environment.ps1
@@ -205,8 +205,8 @@ npm run dev
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/job-portal.git
-cd job-portal
+git clone https://github.com/pratham-12-lab/Minor_Project.git
+cd Minor_Project
 ```
 
 ### Step 2: Backend Setup
@@ -582,7 +582,7 @@ module.exports = {
 
 ### ☁️ Cloud Deployment (Render)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/pratham-12-lab/Minor_Project)
 
 #### Quick Deploy Steps:
 
@@ -1006,7 +1006,7 @@ We welcome contributions from the community! Here's how you can help:
 
 <div align="center">
 
-[![Contributors](https://contrib.rocks/image?repo=yourusername/job-portal)](https://github.com/yourusername/job-portal/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=pratham-12-lab/Minor_Project)](https://github.com/pratham-12-lab/Minor_Project/graphs/contributors)
 
 </div>
 
@@ -1114,17 +1114,17 @@ For enterprise customers and priority support:
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/job-portal?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/job-portal?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/yourusername/job-portal?style=social)
+![GitHub stars](https://img.shields.io/github/stars/pratham-12-lab/Minor_Project?style=social)
+![GitHub forks](https://img.shields.io/github/forks/pratham-12-lab/Minor_Project?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/pratham-12-lab/Minor_Project?style=social)
 
-![GitHub issues](https://img.shields.io/github/issues/yourusername/job-portal)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/job-portal)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/job-portal)
+![GitHub issues](https://img.shields.io/github/issues/pratham-12-lab/Minor_Project)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/pratham-12-lab/Minor_Project)
+![GitHub last commit](https://img.shields.io/github/last-commit/pratham-12-lab/Minor_Project)
 
-![Code size](https://img.shields.io/github/languages/code-size/yourusername/job-portal)
-![Repo size](https://img.shields.io/github/repo-size/yourusername/job-portal)
-![Lines of code](https://tokei.rs/b1/github/yourusername/job-portal)
+![Code size](https://img.shields.io/github/languages/code-size/pratham-12-lab/Minor_Project)
+![Repo size](https://img.shields.io/github/repo-size/pratham-12-lab/Minor_Project)
+![Lines of code](https://tokei.rs/b1/github/pratham-12-lab/Minor_Project)
 
 </div>
 
@@ -1144,7 +1144,7 @@ For enterprise customers and priority support:
 
 <div align="center">
 
-**[Your Name](https://github.com/prathaml-12-lab)**  
+**[Pratham](https://github.com/pratham-12-lab)**  
 Full-Stack Developer & Project Architect
 
 *"Connecting talent with opportunity, one line of code at a time."*
