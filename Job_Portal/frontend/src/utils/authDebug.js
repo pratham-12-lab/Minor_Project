@@ -40,7 +40,7 @@ export const testAuthAPI = async () => {
   
   try {
     // Test with cookies
-    const cookieResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/messages/conversations`, {
+    const cookieResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/messages/conversations`, {
       credentials: 'include',
     });
     console.log('🍪 Cookie auth response:', cookieResponse.status, await cookieResponse.text());
@@ -52,7 +52,7 @@ export const testAuthAPI = async () => {
     // Test with token
     const token = localStorage.getItem('token');
     if (token) {
-      const tokenResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/messages/conversations`, {
+      const tokenResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/messages/conversations`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
