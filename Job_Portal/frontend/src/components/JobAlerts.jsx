@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Bell, Trash2, Edit2, Plus, X } from 'lucide-react';
 
-const JOB_ALERT_API = 'http://localhost:8000/api/job-alerts';
+const JOB_ALERT_API = `${import.meta.env.VITE_API_BASE_URL}/job-alerts`;
 
 const JobAlerts = () => {
     const [jobAlerts, setJobAlerts] = useState([]);

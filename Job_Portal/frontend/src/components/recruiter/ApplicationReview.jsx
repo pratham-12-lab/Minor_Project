@@ -26,7 +26,7 @@ const ApplicationReview = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://job-portal-backend-7ef9.onrender.com';
       const response = await axios.get(
         `${API_BASE_URL}/api/applications/applicants/${jobId}?sortBy=${sortBy}&status=${statusFilter}`,
         {
@@ -48,7 +48,7 @@ const ApplicationReview = () => {
   const updateApplicationStatus = async (applicationId, status, rejectionReason = '') => {
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://job-portal-backend-7ef9.onrender.com';
       await axios.put(
         `${API_BASE_URL}/api/applications/status/${applicationId}`,
         { status, message: rejectionReason },

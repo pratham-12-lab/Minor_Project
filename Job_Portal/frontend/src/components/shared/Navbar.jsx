@@ -13,7 +13,7 @@ import NotificationCenter from '../NotificationCenter';
 import SocketIndicator from '../SocketIndicator';
 
 // ✅ Updated API constant
-const USER_API_END_POINT = 'http://localhost:8000/api/users';
+const USER_API_END_POINT = `${import.meta.env.VITE_API_BASE_URL}/users`;
 
 const Navbar = () => {
     const { user } = useSelector(store => store.auth);

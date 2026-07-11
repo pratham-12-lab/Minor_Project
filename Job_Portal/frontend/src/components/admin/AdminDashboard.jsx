@@ -7,7 +7,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 
-const ADMIN_API = 'http://localhost:8000/api/admin';
+const ADMIN_API = `${import.meta.env.VITE_API_BASE_URL}/admin`;
 
 const AdminDashboard = () => {
     const navigate = useNavigate();

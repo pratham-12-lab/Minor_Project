@@ -3,7 +3,7 @@ import { Send, Bot, User, ThumbsUp, ThumbsDown, Star, Loader2, X, MessageSquare 
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://job-portal-backend-7ef9.onrender.com';
 
 const EnhancedChatbot = ({ isOpen, onToggle }) => {
   const [messages, setMessages] = useState([]);
