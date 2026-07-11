@@ -905,7 +905,7 @@ For enterprise customers and priority support:
 
 <div align="center">
 
-**[Your Name](https://github.com/yourusername)**  
+**[Your Name](https://github.com/prathaml-12-lab)**  
 Full-Stack Developer & Project Architect
 
 *"Connecting talent with opportunity, one line of code at a time."*
