@@ -40,7 +40,7 @@ export const testAuthAPI = async () => {
   
   try {
     // Test with cookies
-    const cookieResponse = await fetch('http://localhost:8000/api/messages/conversations', {
+    const cookieResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/messages/conversations`, {
       credentials: 'include',
     });
     console.log('🍪 Cookie auth response:', cookieResponse.status, await cookieResponse.text());
@@ -52,7 +52,7 @@ export const testAuthAPI = async () => {
     // Test with token
     const token = localStorage.getItem('token');
     if (token) {
-      const tokenResponse = await fetch('http://localhost:8000/api/messages/conversations', {
+      const tokenResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/messages/conversations`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
