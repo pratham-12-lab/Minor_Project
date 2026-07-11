@@ -200,17 +200,12 @@ export const getAllJobs = async (req, res) => {
       .populate("company")
       .sort({ createdAt: -1 });
 
-    if (!jobs || jobs.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No jobs found."
-      });
-    }
-
+    // ✅ Return empty array instead of 404 when no jobs found
     return res.status(200).json({
       success: true,
-      jobs,
-      count: jobs.length
+      jobs: jobs || [],
+      count: jobs ? jobs.length : 0,
+      message: jobs && jobs.length > 0 ? "Jobs retrieved successfully" : "No jobs found"
     });
 
   } catch (error) {
