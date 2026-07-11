@@ -24,7 +24,6 @@ services:
     name: job-portal-frontend
     env: static
     plan: free
-    region: singapore
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
