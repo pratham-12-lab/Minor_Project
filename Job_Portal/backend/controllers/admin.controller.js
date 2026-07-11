@@ -258,7 +258,7 @@ export const adminLogin = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Incorrect email or password' });
         }
 
-        const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || process.env.SECRET_KEY, { expiresIn: '1d' });
 
         const safeUser = {
             _id: user._id,

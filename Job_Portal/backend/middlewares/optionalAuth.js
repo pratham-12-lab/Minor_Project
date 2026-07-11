@@ -13,7 +13,7 @@ const optionalAuth = async (req, res, next) => {
             return next();
         }
 
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.SECRET_KEY);
         
         if (!decoded) {
             // Invalid token - continue as anonymous user
