@@ -78,18 +78,21 @@ const PostJob = () => {
             console.log('Submitting job data:', input);
             
             let res;
+            const token = localStorage.getItem('token');
             if (isEdit) {
                 // Update existing job (backend should expose this endpoint)
                 res = await axios.put(`${JOB_API_END_POINT}/update/${jobId}`, input, {
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     withCredentials: true
                 });
             } else {
                 res = await axios.post(`${JOB_API_END_POINT}/post`, input, {
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     withCredentials: true
                 });
@@ -119,7 +122,11 @@ const PostJob = () => {
             try {
                 if (!isEdit) return;
                 setLoading(true);
-                const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, { withCredentials: true });
+                const token = localStorage.getItem('token');
+                const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, { 
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true 
+                });
                 if (res.data && res.data.success) {
                     const job = res.data.job;
                     setInput({

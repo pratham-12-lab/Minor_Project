@@ -40,8 +40,11 @@ const ApplicantsTable = () => {
             }
 
             console.log('🚀 Sending status update:', { status, message, messageLength: message ? message.length : 0 });
-            axios.defaults.withCredentials = true;
-            const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status, message });
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status, message }, {
+                headers: { Authorization: `Bearer ${token}` },
+                withCredentials: true
+            });
             
             if (res.data.success) {
                 // Enhanced feedback for interview scheduling
