@@ -24,20 +24,28 @@ export const NotificationCenter = ({ onClose, maxHeight = '500px' }) => {
   } = useNotifications();
 
   const [activeFilter, setActiveFilter] = useState('all');
-  const { user } = useSelector(store => store.auth);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const { user, token } = useSelector(store => store.auth);
 
+  // Wait for Redux to rehydrate from localStorage before fetching
   useEffect(() => {
-    // Only fetch notifications if user is authenticated
-    if (user) {
-      // Fetch initial notifications
+    const timer = setTimeout(() => {
+      setHasCheckedAuth(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch notifications after auth is ready
+  useEffect(() => {
+    if (hasCheckedAuth && user && token) {
       fetchNotifications({ limit: 20 }).catch(() => {
         // Silently handle errors to prevent console spam
       });
     }
-  }, [user]);
+  }, [hasCheckedAuth, user, token, fetchNotifications]);
 
   // Don't render notification center if user is not authenticated
-  if (!user) {
+  if (!user || !token) {
     return null;
   }
 

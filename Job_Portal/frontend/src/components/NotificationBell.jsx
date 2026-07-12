@@ -10,24 +10,34 @@ import { useSelector } from 'react-redux';
 export const NotificationBell = ({ onClick, className = '' }) => {
   const { unreadCount, getUnreadCount } = useNotifications();
   const [isAnimating, setIsAnimating] = useState(false);
-  const { user } = useSelector(store => store.auth);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const { user, token } = useSelector(store => store.auth);
 
+  // Wait for Redux to rehydrate from localStorage before fetching
   useEffect(() => {
-    // Only fetch notifications if user is authenticated
-    if (user) {
-      // Refresh unread count on mount
+    const timer = setTimeout(() => {
+      setHasCheckedAuth(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch unread count after auth is ready
+  useEffect(() => {
+    if (hasCheckedAuth && user && token) {
       getUnreadCount().catch(() => {
         // Silently handle errors to prevent console spam
       });
     }
+  }, [hasCheckedAuth, user, token, getUnreadCount]);
 
+  useEffect(() => {
     // Animate when unread count changes
     if (unreadCount > 0) {
       setIsAnimating(true);
       const timer = setTimeout(() => setIsAnimating(false), 300);
       return () => clearTimeout(timer);
     }
-  }, [unreadCount, getUnreadCount, user]);
+  }, [unreadCount]);
 
   // Don't render notification bell if user is not authenticated
   if (!user) {
