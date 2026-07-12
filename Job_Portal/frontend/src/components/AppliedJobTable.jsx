@@ -12,7 +12,13 @@ const AppliedJobTable = () => {
     
     const handleReapply = async (jobId) => {
         try {
-            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, {withCredentials:true});
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
             if(res.data.success){
                 toast.success("Application resubmitted successfully!");
                 // Refresh the page to show updated status
