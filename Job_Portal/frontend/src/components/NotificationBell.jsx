@@ -11,7 +11,8 @@ export const NotificationBell = ({ onClick, className = '' }) => {
   const { unreadCount, getUnreadCount } = useNotifications();
   const [isAnimating, setIsAnimating] = useState(false);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-  const { user, token } = useSelector(store => store.auth);
+  const { user } = useSelector(store => store.auth);
+  const token = localStorage.getItem('token');
 
   // Wait for Redux to rehydrate from localStorage before fetching
   useEffect(() => {
@@ -28,7 +29,7 @@ export const NotificationBell = ({ onClick, className = '' }) => {
         // Silently handle errors to prevent console spam
       });
     }
-  }, [hasCheckedAuth, user, token, getUnreadCount]);
+  }, [hasCheckedAuth, user, getUnreadCount]);
 
   useEffect(() => {
     // Animate when unread count changes
