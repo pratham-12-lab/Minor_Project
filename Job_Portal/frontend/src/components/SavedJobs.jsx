@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from './shared/Navbar';
 import axios from 'axios';
-import { SAVED_JOBS_API_END_POINT } from '@/utils/constant';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Bookmark, MapPin, Clock, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import savedJobService from '@/services/savedJobService';
 
 const SavedJobs = () => {
     const [savedJobs, setSavedJobs] = useState([]);
@@ -19,11 +19,9 @@ const SavedJobs = () => {
 
     const fetchSavedJobs = async () => {
         try {
-            const res = await axios.get(`${SAVED_JOBS_API_END_POINT}/get`, {
-                withCredentials: true
-            });
-            if (res.data.success) {
-                setSavedJobs(res.data.savedJobs);
+            const result = await savedJobService.getSavedJobs();
+            if (result.success) {
+                setSavedJobs(result.savedJobs);
             }
         } catch (error) {
             console.log(error);
@@ -35,10 +33,8 @@ const SavedJobs = () => {
 
     const handleUnsave = async (jobId) => {
         try {
-            const res = await axios.delete(`${SAVED_JOBS_API_END_POINT}/unsave/${jobId}`, {
-                withCredentials: true
-            });
-            if (res.data.success) {
+            const result = await savedJobService.unsaveJob(jobId);
+            if (result.success) {
                 toast.success('Job removed from saved');
                 // Remove from local state
                 setSavedJobs(savedJobs.filter(job => job._id !== jobId));

@@ -5,9 +5,10 @@ import { Avatar, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { SAVED_JOBS_API_END_POINT, APPLICATION_API_END_POINT } from '@/utils/constant';
+import { APPLICATION_API_END_POINT } from '@/utils/constant';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
+import savedJobService from '@/services/savedJobService';
 
 const Job = ({ job }) => {
     const navigate = useNavigate();
@@ -25,11 +26,9 @@ const Job = ({ job }) => {
 
     const checkIfSaved = async () => {
         try {
-            const res = await axios.get(`${SAVED_JOBS_API_END_POINT}/check/${job._id}`, {
-                withCredentials: true
-            });
-            if (res.data.success) {
-                setIsSaved(res.data.isSaved);
+            const result = await savedJobService.checkJobSaved(job._id);
+            if (result.success) {
+                setIsSaved(result.isSaved);
             }
         } catch (error) {
             console.log(error);
@@ -98,19 +97,15 @@ const Job = ({ job }) => {
         try {
             if (isSaved) {
                 // Unsave the job
-                const res = await axios.delete(`${SAVED_JOBS_API_END_POINT}/unsave/${job._id}`, {
-                    withCredentials: true
-                });
-                if (res.data.success) {
+                const result = await savedJobService.unsaveJob(job._id);
+                if (result.success) {
                     setIsSaved(false);
                     toast.success('Job removed from saved');
                 }
             } else {
                 // Save the job
-                const res = await axios.post(`${SAVED_JOBS_API_END_POINT}/save/${job._id}`, {}, {
-                    withCredentials: true
-                });
-                if (res.data.success) {
+                const result = await savedJobService.saveJob(job._id);
+                if (result.success) {
                     setIsSaved(true);
                     toast.success('Job saved successfully');
                 }
