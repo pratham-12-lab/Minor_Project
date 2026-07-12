@@ -116,16 +116,9 @@ export const getAppliedJobs = async (req, res) => {
         }
       });
 
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No applications found."
-      });
-    }
-
     return res.status(200).json({
       success: true,
-      applications
+      applications: applications || []
     });
 
   } catch (error) {
