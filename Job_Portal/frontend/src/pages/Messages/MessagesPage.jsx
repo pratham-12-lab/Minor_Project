@@ -16,6 +16,7 @@ export const MessagesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const { isConnected, initializeSocket, getOnlineUserIds } = useSocket();
   const { conversations, fetchConversations } = useChat();
@@ -23,6 +24,15 @@ export const MessagesPage = () => {
   // Get current user from Redux
   const user = useSelector((state) => state?.auth?.user);
   const token = localStorage.getItem('token');
+
+  // Wait for Redux to rehydrate
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setHasCheckedAuth(true);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // Initialize socket connection on mount
   useEffect(() => {
@@ -55,15 +65,15 @@ export const MessagesPage = () => {
       }
     };
 
-    if (user && token) {
+    if (user && token && hasCheckedAuth) {
       loadConversations();
-    } else {
+    } else if (!token && hasCheckedAuth) {
       setLoading(false);
     }
-  }, [fetchConversations, user, token]);
+  }, [fetchConversations, user, token, hasCheckedAuth]);
 
-  // Redirect to login if not authenticated
-  if (!user || !token) {
+  // Redirect to login if not authenticated (only after Redux rehydration check)
+  if (!token && hasCheckedAuth) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -72,6 +82,21 @@ export const MessagesPage = () => {
           <Button onClick={() => navigate('/login')}>
             Go to Login
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while Redux rehydrates
+  if (!hasCheckedAuth) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="mt-4 flex justify-center gap-1">
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+          </div>
         </div>
       </div>
     );

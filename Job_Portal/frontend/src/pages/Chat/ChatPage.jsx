@@ -15,6 +15,7 @@ export const ChatPage = () => {
   const [recipientInfo, setRecipientInfo] = useState(null);
   const [error, setError] = useState(null);
   const [actualRoomId, setActualRoomId] = useState(roomId);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const { isConnected, initializeSocket, disconnectSocket, getOnlineUserIds } =
     useSocket();
@@ -23,6 +24,15 @@ export const ChatPage = () => {
   // Get current user from Redux
   const user = useSelector((state) => state?.auth?.user);
   const token = localStorage.getItem('token');
+
+  // Wait for Redux to rehydrate
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setHasCheckedAuth(true);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // Initialize socket connection on mount
   useEffect(() => {
@@ -49,7 +59,7 @@ export const ChatPage = () => {
   // Handle userId route - create or find room with specific user
   useEffect(() => {
     const handleUserChat = async () => {
-      if (userId && !roomId && user && token) {
+      if (userId && !roomId && user && token && hasCheckedAuth) {
         try {
           const response = await getOrCreateRoom(userId);
           if (response.success) {
@@ -67,7 +77,7 @@ export const ChatPage = () => {
     };
 
     handleUserChat();
-  }, [userId, roomId, user, token, getOrCreateRoom]);
+  }, [userId, roomId, user, token, hasCheckedAuth, getOrCreateRoom]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -79,10 +89,10 @@ export const ChatPage = () => {
       }
     };
 
-    if (isConnected) {
+    if (isConnected && hasCheckedAuth) {
       loadConversations();
     }
-  }, [isConnected, fetchConversations]);
+  }, [isConnected, fetchConversations, hasCheckedAuth]);
 
   // Get online status of recipient
   const onlineUserIds = getOnlineUserIds();
@@ -94,7 +104,23 @@ export const ChatPage = () => {
     navigate('/messages');
   };
 
-  if (!user || !token) {
+  // Show loading while Redux rehydrates
+  if (!hasCheckedAuth) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+          <div className="mt-4 flex justify-center gap-1">
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
