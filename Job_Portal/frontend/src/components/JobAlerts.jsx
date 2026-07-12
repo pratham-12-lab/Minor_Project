@@ -44,7 +44,11 @@ const JobAlerts = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.post(`${JOB_ALERT_API}/create`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             if (res.data.success) {
@@ -69,7 +73,11 @@ const JobAlerts = () => {
         if (!window.confirm('Are you sure you want to delete this job alert?')) return;
 
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.delete(`${JOB_ALERT_API}/delete/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             if (res.data.success) {
@@ -84,10 +92,16 @@ const JobAlerts = () => {
 
     const handleToggleActive = async (id, currentStatus) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.put(
                 `${JOB_ALERT_API}/update/${id}`,
                 { isActive: !currentStatus },
-                { withCredentials: true }
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true
+                }
             );
             if (res.data.success) {
                 toast.success(`Job alert ${!currentStatus ? 'activated' : 'deactivated'}`);
