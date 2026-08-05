@@ -15,15 +15,20 @@ const AnalyticsDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [noProfile, setNoProfile] = useState(false);
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return { 
+      headers: { 'Authorization': `Bearer ${token}` },
+      withCredentials: true 
+    };
+  };
+
   useEffect(() => {
     const fetchJobAndAnalyze = async () => {
       try {
         // Fetch job details with credentials
-        const token = localStorage.getItem('token');
-        const jobRes = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          withCredentials: true
-        });
+        const jobRes = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, getAuthHeaders());
         if (jobRes.data.success) {
           setJob(jobRes.data.job);
         }
@@ -40,10 +45,7 @@ const AnalyticsDashboard = () => {
         const analysisRes = await axios.post(
           `${ANALYTICS_API_END_POINT}/analyze-for-job`,
           { jobId },
-          { 
-            headers: { 'Authorization': `Bearer ${token}` },
-            withCredentials: true 
-          }
+          getAuthHeaders()
         );
         
         if (analysisRes.data.success) {
@@ -66,14 +68,10 @@ const AnalyticsDashboard = () => {
   const handleReanalyze = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.post(
         `${ANALYTICS_API_END_POINT}/analyze-for-job`,
         { jobId },
-        { 
-          headers: { 'Authorization': `Bearer ${token}` },
-          withCredentials: true 
-        }
+        getAuthHeaders()
       );
       if (res.data.success) {
         setResult(res.data);
