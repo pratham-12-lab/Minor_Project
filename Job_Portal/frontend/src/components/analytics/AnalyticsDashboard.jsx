@@ -37,7 +37,6 @@ const AnalyticsDashboard = () => {
 
         // Auto-analyze using profile data
         setLoading(true);
-        const token = localStorage.getItem('token');
         const analysisRes = await axios.post(
           `${ANALYTICS_API_END_POINT}/analyze-for-job`,
           { jobId },
