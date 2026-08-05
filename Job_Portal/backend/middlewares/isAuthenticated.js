@@ -17,7 +17,9 @@ const isAuthenticated = async (req, res, next) => {
             hasCookieToken: !!req.cookies.token,
             hasAuthHeader: !!req.headers.authorization,
             hasToken: !!token,
-            path: req.path
+            path: req.path,
+            method: req.method,
+            userAgent: req.headers['user-agent']?.substring(0, 30)
         });
         
         if (!token) {

@@ -69,7 +69,11 @@ const Job = ({ job }) => {
 
         setApplyLoading(true);
         try {
+            const token = localStorage.getItem('token');
             const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${job._id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             if (res.data.success) {
