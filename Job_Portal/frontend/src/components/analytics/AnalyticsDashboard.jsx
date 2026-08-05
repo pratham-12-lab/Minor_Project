@@ -19,7 +19,9 @@ const AnalyticsDashboard = () => {
     const fetchJobAndAnalyze = async () => {
       try {
         // Fetch job details with credentials
+        const token = localStorage.getItem('token');
         const jobRes = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
           withCredentials: true
         });
         if (jobRes.data.success) {
@@ -35,10 +37,14 @@ const AnalyticsDashboard = () => {
 
         // Auto-analyze using profile data
         setLoading(true);
+        const token = localStorage.getItem('token');
         const analysisRes = await axios.post(
           `${ANALYTICS_API_END_POINT}/analyze-for-job`,
           { jobId },
-          { withCredentials: true }
+          { 
+            headers: { 'Authorization': `Bearer ${token}` },
+            withCredentials: true 
+          }
         );
         
         if (analysisRes.data.success) {
@@ -61,10 +67,14 @@ const AnalyticsDashboard = () => {
   const handleReanalyze = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.post(
         `${ANALYTICS_API_END_POINT}/analyze-for-job`,
         { jobId },
-        { withCredentials: true }
+        { 
+          headers: { 'Authorization': `Bearer ${token}` },
+          withCredentials: true 
+        }
       );
       if (res.data.success) {
         setResult(res.data);
