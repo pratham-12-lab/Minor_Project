@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
 import { Avatar, AvatarImage } from '../ui/avatar';
-import { LogOut, User2, MessageCircle, Menu, X } from 'lucide-react';
+import { LogOut, User2, MessageCircle, Menu, X, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -11,9 +11,7 @@ import { toast } from 'sonner';
 import NotificationBell from '../NotificationBell';
 import NotificationCenter from '../NotificationCenter';
 import SocketIndicator from '../SocketIndicator';
-
-// ✅ Updated API constant with proper fallback
-const USER_API_END_POINT = `${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/users`;
+import { USER_API_END_POINT } from '@/utils/constant';
 
 const Navbar = () => {
     const { user } = useSelector(store => store.auth);
@@ -56,7 +54,13 @@ const Navbar = () => {
 
                 {/* Desktop Navigation */}
                 <div className='hidden md:flex items-center gap-12'>
-                    {user && user.role === 'recruiter' ? (
+                    {user && user.role === 'admin' ? (
+                        <>
+                            <ul className='flex font-medium items-center gap-5'>
+                                <li><Link to="/admin/dashboard" className='text-[#6A38C2] font-semibold hover:text-[#5b30a6] transition-colors'>Admin Dashboard</Link></li>
+                            </ul>
+                        </>
+                    ) : user && user.role === 'recruiter' ? (
                         <>
                             <ul className='flex font-medium items-center gap-5'>
                                 <li><Link to="/admin/companies" className='hover:text-[#6A38C2] transition-colors'>Companies</Link></li>
@@ -125,6 +129,12 @@ const Navbar = () => {
                                             </div>
                                         </div>
                                         <div className='flex flex-col my-2 text-gray-600'>
+                                            {user && user.role === 'admin' && (
+                                                <div className='flex w-fit items-center gap-2 cursor-pointer'>
+                                                    <LayoutDashboard className="w-4 h-4 text-[#6A38C2]" />
+                                                    <Button variant="link"><Link to="/admin/dashboard">Admin Dashboard</Link></Button>
+                                                </div>
+                                            )}
                                             {user && user.role === 'student' && (
                                                 <div className='flex w-fit items-center gap-2 cursor-pointer'>
                                                     <User2 />
@@ -165,7 +175,11 @@ const Navbar = () => {
             {mobileMenuOpen && (
                 <div className='md:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-lg z-50'>
                     <div className='px-4 py-4 space-y-4'>
-                        {user && user.role === 'recruiter' ? (
+                        {user && user.role === 'admin' ? (
+                            <>
+                                <Link to="/admin/dashboard" onClick={handleLinkClick} className='block py-2 text-[#6A38C2] font-semibold hover:text-[#5b30a6] transition-colors'>Admin Dashboard</Link>
+                            </>
+                        ) : user && user.role === 'recruiter' ? (
                             <>
                                 <Link to="/admin/companies" onClick={handleLinkClick} className='block py-2 text-gray-700 hover:text-[#6A38C2] transition-colors'>Companies</Link>
                                 <Link to="/admin/jobs" onClick={handleLinkClick} className='block py-2 text-gray-700 hover:text-[#6A38C2] transition-colors'>Jobs</Link>
@@ -205,6 +219,14 @@ const Navbar = () => {
                                         <p className='text-sm text-gray-500'>{user?.email}</p>
                                     </div>
                                 </div>
+                                {user && user.role === 'admin' && (
+                                    <Link to="/admin/dashboard" onClick={handleLinkClick} className='block py-2 text-gray-700 hover:text-[#6A38C2] transition-colors'>
+                                        <div className='flex items-center gap-2'>
+                                            <LayoutDashboard size={18} />
+                                            Admin Dashboard
+                                        </div>
+                                    </Link>
+                                )}
                                 {user && user.role === 'student' && (
                                     <Link to="/profile" onClick={handleLinkClick} className='block py-2 text-gray-700 hover:text-[#6A38C2] transition-colors'>
                                         <div className='flex items-center gap-2'>

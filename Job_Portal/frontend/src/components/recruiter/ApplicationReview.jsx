@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Star, User, Mail, Phone, MapPin, Calendar, Award, Briefcase, GraduationCap, Eye, MessageSquare, CheckCircle, XCircle, Clock } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { APPLICATION_API_END_POINT } from '@/utils/constant';
 
 const ApplicationReview = () => {
   const { jobId } = useParams();
@@ -26,9 +27,8 @@ const ApplicationReview = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://job-portal-backend-7ef9.onrender.com';
       const response = await axios.get(
-        `${API_BASE_URL}/api/applications/applicants/${jobId}?sortBy=${sortBy}&status=${statusFilter}`,
+        `${APPLICATION_API_END_POINT}/applicants/${jobId}?sortBy=${sortBy}&status=${statusFilter}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -48,9 +48,8 @@ const ApplicationReview = () => {
   const updateApplicationStatus = async (applicationId, status, rejectionReason = '') => {
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://job-portal-backend-7ef9.onrender.com';
       await axios.put(
-        `${API_BASE_URL}/api/applications/status/${applicationId}`,
+        `${APPLICATION_API_END_POINT}/status/${applicationId}`,
         { status, message: rejectionReason },
         {
           headers: { Authorization: `Bearer ${token}` }

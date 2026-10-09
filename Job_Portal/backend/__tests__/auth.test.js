@@ -16,6 +16,7 @@ import {
   TestDataFactory 
 } from './test-utils.js';
 import { User } from '../models/user.model.js';
+import { seedAdminAccount } from '../utils/seedAdmin.js';
 
 describe('Authentication API Tests', () => {
   beforeAll(async () => {
@@ -142,6 +143,22 @@ describe('Authentication API Tests', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('Company name is required');
     });
+
+    test('should reject public registration with admin role', async () => {
+      const userData = TestDataFactory.createUser({
+        email: 'attacker-admin@test.com',
+        role: 'admin',
+      });
+
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(userData)
+        .expect('Content-Type', /json/)
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Admin registration is not allowed');
+    });
   });
 
   describe('POST /api/users/login', () => {
@@ -213,6 +230,27 @@ describe('Authentication API Tests', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('required');
+    });
+
+    test('should allow seeded admin to login with admin credentials and role', async () => {
+      process.env.ADMIN_EMAIL = 'admin-seed-test@test.com';
+      process.env.ADMIN_PASSWORD = 'AdminTestPassword123!';
+      const seeded = await seedAdminAccount();
+      expect(seeded).toBeDefined();
+      expect(seeded.role).toBe('admin');
+
+      const response = await request(app)
+        .post('/api/users/login')
+        .send({
+          email: 'admin-seed-test@test.com',
+          password: 'AdminTestPassword123!',
+          role: 'admin',
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.user.role).toBe('admin');
     });
   });
 

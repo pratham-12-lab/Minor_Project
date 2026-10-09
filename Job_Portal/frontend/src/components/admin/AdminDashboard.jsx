@@ -6,8 +6,9 @@ import axios from 'axios';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
+import { ADMIN_API_END_POINT } from '@/utils/constant';
 
-const ADMIN_API = `${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/admin`;
+const ADMIN_API = ADMIN_API_END_POINT;
 
 const AdminDashboard = () => {
     const navigate = useNavigate();

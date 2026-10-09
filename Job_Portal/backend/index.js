@@ -273,8 +273,9 @@ app.use("/api/notifications", apiLimiter, notificationRoutes);
 // START SERVER
 // ========================
 
-server.listen(PORT, () => {
-  console.log(`
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => {
+    console.log(`
 ========================================
 ✅ Job Portal API Server Started
 ========================================
@@ -296,14 +297,17 @@ server.listen(PORT, () => {
 💬 Chat API: http://localhost:${PORT}/api/messages
 🔔 Notifications API: http://localhost:${PORT}/api/notifications
 ========================================
-  `);
-  
-  // Security startup check
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('your_')) {
-    console.warn('⚠️  WARNING: JWT_SECRET is using default value. Update in .env file!');
-  }
-  
-  if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('your_')) {
-    console.warn('⚠️  WARNING: MONGO_URI is using default value. Update in .env file!');
-  }
-});
+    `);
+    
+    // Security startup check
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('your_')) {
+      console.warn('⚠️  WARNING: JWT_SECRET is using default value. Update in .env file!');
+    }
+    
+    if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('your_')) {
+      console.warn('⚠️  WARNING: MONGO_URI is using default value. Update in .env file!');
+    }
+  });
+}
+
+export default app;

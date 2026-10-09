@@ -5,7 +5,7 @@ import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 import emailService from "../services/emailService.js";
 
-// ✅ REGISTER - With Admin Role & Verification
+// ✅ REGISTER - Public Registration for Students and Recruiters
 export const register = async (req, res) => {
   try {
     const { fullname, email, phoneNumber, password, role, companyName, companyWebsite } = req.body;
@@ -17,11 +17,19 @@ export const register = async (req, res) => {
       });
     }
 
-    // ✅ Validate role
-    if (!['student', 'recruiter', 'admin'].includes(role)) {
+    // 🔒 Security: Block public registration for admin role
+    if (role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Admin registration is not allowed. Admin accounts are pre-provisioned by the system. Please log in using your admin credentials.",
+      });
+    }
+
+    // ✅ Validate role (only student and recruiter can self-register)
+    if (!['student', 'recruiter'].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role. Must be student, recruiter, or admin",
+        message: "Invalid role. Must be student or recruiter",
       });
     }
 
@@ -63,16 +71,16 @@ export const register = async (req, res) => {
       role,
       companyName: role === 'recruiter' ? companyName : undefined,
       companyWebsite: role === 'recruiter' ? companyWebsite : undefined,
-      // ✅ Auto-verify Student and Admin, Recruiter needs approval
-      isVerified: (role === 'student' || role === 'admin') ? true : false,
-      verificationStatus: (role === 'student' || role === 'admin') ? 'approved' : 'pending',
+      // ✅ Auto-verify Student, Recruiter needs approval
+      isVerified: role === 'student' ? true : false,
+      verificationStatus: role === 'student' ? 'approved' : 'pending',
       profile: {
         profilePhoto: profilePhotoUrl,
       },
     });
 
     // Send welcome email (non-blocking — registration succeeds even if email fails)
-    const userType = role === 'student' ? 'jobseeker' : role === 'admin' ? 'admin' : 'employer';
+    const userType = role === 'student' ? 'jobseeker' : 'employer';
     try {
       await emailService.sendWelcomeEmail(email, fullname, userType);
     } catch (emailError) {
@@ -80,14 +88,9 @@ export const register = async (req, res) => {
     }
 
     // ✅ Different success messages based on role
-    let message;
-    if (role === 'recruiter') {
-      message = "Registration successful! Your account is pending admin approval.";
-    } else if (role === 'admin') {
-      message = "Admin account created successfully!";
-    } else {
-      message = "Registration successful! Welcome email sent to your inbox.";
-    }
+    let message = role === 'recruiter'
+      ? "Registration successful! Your account is pending admin approval."
+      : "Registration successful! Welcome email sent to your inbox.";
 
     return res.status(201).json({
       success: true,
@@ -158,6 +161,14 @@ export const login = async (req, res) => {
         }`,
         success: false,
         verificationStatus: user.verificationStatus,
+      });
+    }
+
+    // 🔒 Ensure admin account is verified and not rejected
+    if (user.role === 'admin' && (!user.isVerified || user.verificationStatus === 'rejected')) {
+      return res.status(403).json({
+        message: "Admin account is not authorized or has been disabled.",
+        success: false,
       });
     }
 

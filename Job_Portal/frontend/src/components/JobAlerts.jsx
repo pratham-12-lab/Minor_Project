@@ -6,8 +6,9 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Bell, Trash2, Edit2, Plus, X } from 'lucide-react';
+import { JOB_ALERT_API_END_POINT } from '@/utils/constant';
 
-const JOB_ALERT_API = `${import.meta.env.VITE_API_BASE_URL || 'https://job-portal-backend-7ef9.onrender.com/api'}/job-alerts`;
+const JOB_ALERT_API = JOB_ALERT_API_END_POINT;
 
 const JobAlerts = () => {
     const [jobAlerts, setJobAlerts] = useState([]);

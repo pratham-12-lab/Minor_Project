@@ -318,20 +318,10 @@ const Signup = () => {
                 />
                 <Label htmlFor="recruiter" className="cursor-pointer text-gray-700">Recruiter (Employer)</Label>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  name="role"
-                  value="admin"
-                  id="admin"
-                  checked={input.role === 'admin'}
-                  onChange={changeEventHandler}
-                  className="cursor-pointer w-4 h-4"
-                />
-                <Label htmlFor="admin" className="cursor-pointer text-gray-700">Admin</Label>
-              </div>
             </RadioGroup>
+            <p className="text-xs text-gray-500 mt-2 bg-gray-50 border border-gray-200 rounded p-2">
+              🛡️ Admin accounts are pre-provisioned and cannot be registered publicly. If you are an administrator, please <Link to="/login" className="text-blue-600 hover:underline font-semibold">Log in with your Admin credentials</Link>.
+            </p>
           </div>
 
           {/* Company Fields for Recruiters */}

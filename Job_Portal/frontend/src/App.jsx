@@ -83,10 +83,10 @@ function App() {
             <Route 
               path="/admin/jobs/:id/edit" 
               element={
-                <ProtectedRoute allowedRoles={["recruiter", "admin"]}>
+                <ProtectedRoute allowedRoles={["recruiter"]}>
                   <PostJob />
                 </ProtectedRoute>
-              }
+              } 
             />
             <Route path="/description/:id" element={<JobDescription />} />
             <Route path="/analytics/:id" element={<AnalyticsDashboard />} />
@@ -108,11 +108,11 @@ function App() {
               } 
             />
 
-            {/* Recruiter & Admin Routes */}
+            {/* Recruiter Routes (Companies & Jobs) */}
             <Route 
               path="/admin/companies" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <Companies />
                 </ProtectedRoute>
               } 
@@ -120,7 +120,7 @@ function App() {
             <Route 
               path="/admin/companies/create" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <CompanyCreate />
                 </ProtectedRoute>
               } 
@@ -128,7 +128,7 @@ function App() {
             <Route 
               path="/admin/companies/:id" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <CompanySetup />
                 </ProtectedRoute>
               } 
@@ -136,7 +136,7 @@ function App() {
             <Route 
               path="/admin/jobs" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <AdminJobs />
                 </ProtectedRoute>
               } 
@@ -144,7 +144,7 @@ function App() {
             <Route 
               path="/admin/jobs/create" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <PostJob />
                 </ProtectedRoute>
               } 
@@ -152,7 +152,7 @@ function App() {
             <Route 
               path="/admin/jobs/:id/applicants" 
               element={
-                <ProtectedRoute allowedRoles={['recruiter', 'admin']}>
+                <ProtectedRoute allowedRoles={['recruiter']}>
                   <Applicants />
                 </ProtectedRoute>
               } 

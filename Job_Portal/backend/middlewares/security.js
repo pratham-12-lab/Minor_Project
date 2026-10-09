@@ -421,21 +421,21 @@ export const securityLogger = (req, res, next) => {
 };
 
 // CORS Configuration
-// CORS Configuration - Allow all origins in development
+// CORS Configuration - Allow all origins in development and supported origins in production
 export const corsConfig = {
   origin: (origin, callback) => {
-    // Allow all origins in development
-    if (process.env.NODE_ENV !== 'production') {
+    // Allow all origins in development, or if request is same-origin / server-to-server (no origin)
+    if (process.env.NODE_ENV !== 'production' || !origin || origin.startsWith('http://localhost:')) {
       callback(null, true);
       return;
     }
     
     // In production, check allowed origins
     const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',') 
-      : ['http://localhost:5173', 'http://localhost:3000'];
+      ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean);
 
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -444,7 +444,7 @@ export const corsConfig = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie', 'Accept', 'Origin'],
 };
 
 // Export security middleware bundle

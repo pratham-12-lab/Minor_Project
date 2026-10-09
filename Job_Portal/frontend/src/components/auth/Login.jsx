@@ -260,10 +260,24 @@ const Login = () => {
                   onChange={changeEventHandler}
                   className="cursor-pointer w-4 h-4"
                 />
-                <Label htmlFor="r3" className="cursor-pointer text-gray-700">Admin</Label>
+                <Label htmlFor="r3" className="cursor-pointer text-gray-700 flex items-center gap-2">
+                  <span>Admin</span>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-100 text-[#6A38C2]">
+                    Pre-provisioned
+                  </span>
+                </Label>
               </div>
-              {/* Note: Admin accounts should be provisioned securely by the backend. Only users with admin credentials should select this option. */}
             </RadioGroup>
+            {input.role === 'admin' && (
+              <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-md text-xs text-purple-900 leading-relaxed">
+                <p className="font-semibold flex items-center gap-1 text-purple-800">
+                  <span>🛡️</span> Admin Login Notice
+                </p>
+                <p className="mt-0.5 text-purple-700">
+                  Admin access is restricted to system administrators. Log in using your designated account credentials.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
