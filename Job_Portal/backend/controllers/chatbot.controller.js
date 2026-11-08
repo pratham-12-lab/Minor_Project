@@ -1,20 +1,16 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import { Conversation } from '../models/conversation.model.js';
 import chatbotTraining from '../services/chatbotTraining.js';
 
-// Initialize OpenAI only (remove Gemini dependency)
-// Check if it's an OpenRouter API key (starts with sk-or-)
-const isOpenRouter = process.env.OPENAI_API_KEY?.startsWith('sk-or-');
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    ...(isOpenRouter && { baseURL: "https://openrouter.ai/api/v1" })
+// Initialize Groq AI
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
 });
 
-// Force OpenAI provider only
-const AI_PROVIDER = 'openai';
+// Force Groq provider
+const AI_PROVIDER = 'groq';
 
-// Enhanced Job Portal Chatbot with OpenAI Only
+// Enhanced Job Portal Chatbot with Groq AI
 export const sendMessage = async (req, res) => {
     try {
         const { message, userId, userRole, sessionId = generateSessionId() } = req.body;
@@ -61,13 +57,13 @@ export const sendMessage = async (req, res) => {
             reply = simpleResponse;
             source = 'rule-based';
         } else {
-            // Use OpenAI only with enhanced context and better prompting
+            // Use Groq AI with enhanced context and better prompting
             try {
                 const conversationHistory = conversation ? conversation.messages : [];
-                reply = await generateOpenAIResponse(message, userRole || 'guest', conversationHistory, enhancedContext, detectedIntent);
+                reply = await generateGroqResponse(message, userRole || 'guest', conversationHistory, enhancedContext, detectedIntent);
                 source = 'ai-powered';
             } catch (aiError) {
-                console.error('OpenAI generation error:', aiError);
+                console.error('Groq AI generation error:', aiError);
                 reply = getEnhancedResponse(userMessage, userRole || 'guest', enhancedContext, detectedIntent);
                 source = 'enhanced-rules';
             }
@@ -192,8 +188,8 @@ function detectIntent(message, userRole, enhancedContext) {
     return { primary: 'general-inquiry', confidence: 0.5 };
 }
 
-// Generate AI response with OpenAI only
-async function generateOpenAIResponse(message, userRole, conversationHistory, enhancedContext, detectedIntent) {
+// Generate AI response with Groq AI
+async function generateGroqResponse(message, userRole, conversationHistory, enhancedContext, detectedIntent) {
     const intentPrimary = detectedIntent?.primary || 'general-inquiry';
     const intentConfidence = detectedIntent?.confidence || 0.5;
     
@@ -223,7 +219,7 @@ ${getIntentInstructions(intentPrimary, userRole)}
 
 Current User Message: ${message}`;
 
-    // Build conversation messages for OpenAI format
+    // Build conversation messages for Groq format
     const messages = [
         { role: 'system', content: systemPrompt }
     ];
@@ -239,16 +235,15 @@ Current User Message: ${message}`;
     // Add current message
     messages.push({ role: 'user', content: message });
 
-    // Use appropriate model based on provider
-    const model = isOpenRouter ? "openai/gpt-3.5-turbo" : "gpt-3.5-turbo";
-
-    const completion = await openai.chat.completions.create({
-        model: model,
+    // Use Groq's production models (as of Nov 2026)
+    // openai/gpt-oss-120b: 120B params, 500 T/sec - Best quality
+    // openai/gpt-oss-20b: 20B params, 1000 T/sec - Fastest
+    const completion = await groq.chat.completions.create({
+        model: "openai/gpt-oss-120b",  // Production model: High quality, fast inference
         messages: messages,
         max_tokens: 600,
         temperature: 0.7,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
+        top_p: 0.9,
     });
 
     return completion.choices[0].message.content;
@@ -600,14 +595,14 @@ export const getChatbotConfig = async (req, res) => {
             success: true,
             config: {
                 provider: AI_PROVIDER,
-                hasOpenAI: !!process.env.OPENAI_API_KEY,
-                isOpenRouter: isOpenRouter,
+                hasGroq: !!process.env.GROQ_API_KEY,
                 features: {
                     conversationHistory: true,
                     personalizedResponses: true,
                     feedbackLearning: true,
-                    openRouterSupport: isOpenRouter,
-                    aiPowered: true
+                    groqPowered: true,
+                    aiPowered: true,
+                    fastInference: true
                 }
             }
         });

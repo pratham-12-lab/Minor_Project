@@ -170,15 +170,15 @@ export const mockExternalServices = () => {
     sendApplicationStatusEmail: jest.fn().mockResolvedValue(true),
   }));
 
-  // Mock OpenAI service
-  jest.mock('openai', () => ({
+  // Mock Groq AI service
+  jest.mock('groq-sdk', () => ({
     default: jest.fn().mockImplementation(() => ({
       chat: {
         completions: {
           create: jest.fn().mockResolvedValue({
             choices: [{
               message: {
-                content: 'Mock OpenAI response'
+                content: 'Mock Groq AI response'
               }
             }]
           })

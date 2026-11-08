@@ -59,8 +59,8 @@ export const setupTestEnv = () => {
   process.env.SMTP_PORT = '587';
   process.env.SMTP_USER = 'test@test.com';
   process.env.SMTP_PASS = 'test-password';
-  process.env.OPENAI_API_KEY = 'test-openai-key';
-  process.env.CHATBOT_PROVIDER = 'openai';
+  process.env.GROQ_API_KEY = 'test-groq-key';
+  process.env.CHATBOT_PROVIDER = 'groq';
   process.env.APP_NAME = 'Job-Portal-Test';
 };
 
@@ -80,7 +80,7 @@ export const resetTestEnv = () => {
   delete process.env.SMTP_PORT;
   delete process.env.SMTP_USER;
   delete process.env.SMTP_PASS;
-  delete process.env.OPENAI_API_KEY;
+  delete process.env.GROQ_API_KEY;
   delete process.env.CHATBOT_PROVIDER;
   delete process.env.APP_NAME;
 };

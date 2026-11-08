@@ -164,21 +164,22 @@ const getUserContext = async (userId, fetchAll = false) => {
     return { user: null, applications: [] };
   }
 };
-// OpenAI-only chatbot test endpoint
+// Groq AI chatbot test endpoint
 router.get('/test', (req, res) => {
-  const isConfigured = !!process.env.OPENAI_API_KEY;
+  const isConfigured = !!process.env.GROQ_API_KEY;
   
   res.json({ 
     success: true, 
-    message: isConfigured ? 'OpenAI chatbot is configured and ready!' : 'OpenAI chatbot is NOT configured',
+    message: isConfigured ? 'Groq AI chatbot is configured and ready! ⚡' : 'Groq AI chatbot is NOT configured',
     configured: isConfigured,
-    provider: 'OpenAI',
-    isOpenRouter: process.env.OPENAI_API_KEY?.startsWith('sk-or-'),
+    provider: 'Groq AI',
+    model: 'openai/gpt-oss-120b',
+    modelDetails: '120B params, 500 tokens/sec',
     timestamp: new Date()
   });
 });
 
-// Main chat endpoint using enhanced OpenAI-only controller
+// Main chat endpoint using enhanced Groq AI controller
 router.post('/chat', chatbotLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -195,7 +196,7 @@ router.post('/chat', chatbotLimiter, async (req, res) => {
     req.body.userRole = req.user?.role || 'guest';
     req.body.sessionId = req.body.sessionId || `guest_${Date.now()}`;
 
-    // Use the enhanced OpenAI-only controller
+    // Use the enhanced Groq AI controller
     return await ruleBasedChat(req, res);
     
   } catch (error) {
@@ -214,7 +215,7 @@ router.post('/message', isAuthenticated, chatbotLimiter, async (req, res) => {
         req.body.userId = req.id;
         req.body.userRole = req.user?.role || 'student';
         
-        // Use the enhanced controller
+        // Use the enhanced Groq AI controller
         return await ruleBasedChat(req, res);
     } catch (error) {
         console.error('Enhanced chatbot error:', error);
@@ -241,7 +242,9 @@ router.get('/health', (req, res) => {
   res.json({
     success: true,
     status: 'healthy',
-    provider: 'OpenAI-only',
+    provider: 'Groq AI',
+    model: 'openai/gpt-oss-120b',
+    speed: '500 tokens/sec',
     timestamp: new Date()
   });
 });
