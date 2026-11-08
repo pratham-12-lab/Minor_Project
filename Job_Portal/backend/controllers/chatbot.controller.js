@@ -2,13 +2,25 @@ import Groq from "groq-sdk";
 import { Conversation } from '../models/conversation.model.js';
 import chatbotTraining from '../services/chatbotTraining.js';
 
-// Initialize Groq AI
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY
-});
+// Initialize Groq AI (with fallback)
+let groq = null;
+let AI_PROVIDER = 'groq';
 
-// Force Groq provider
-const AI_PROVIDER = 'groq';
+try {
+    if (process.env.GROQ_API_KEY) {
+        groq = new Groq({
+            apiKey: process.env.GROQ_API_KEY
+        });
+        console.log('✅ Groq AI initialized successfully');
+    } else {
+        console.warn('⚠️ GROQ_API_KEY not found - Chatbot will use rule-based responses only');
+        AI_PROVIDER = 'rule-based';
+    }
+} catch (error) {
+    console.error('❌ Error initializing Groq AI:', error.message);
+    console.warn('⚠️ Chatbot will use rule-based responses only');
+    AI_PROVIDER = 'rule-based';
+}
 
 // Enhanced Job Portal Chatbot with Groq AI
 export const sendMessage = async (req, res) => {
@@ -190,6 +202,11 @@ function detectIntent(message, userRole, enhancedContext) {
 
 // Generate AI response with Groq AI
 async function generateGroqResponse(message, userRole, conversationHistory, enhancedContext, detectedIntent) {
+    // Check if Groq is initialized
+    if (!groq) {
+        throw new Error('Groq AI not initialized - falling back to rule-based responses');
+    }
+    
     const intentPrimary = detectedIntent?.primary || 'general-inquiry';
     const intentConfidence = detectedIntent?.confidence || 0.5;
     
@@ -595,14 +612,16 @@ export const getChatbotConfig = async (req, res) => {
             success: true,
             config: {
                 provider: AI_PROVIDER,
-                hasGroq: !!process.env.GROQ_API_KEY,
+                hasGroq: !!process.env.GROQ_API_KEY && groq !== null,
+                groqInitialized: groq !== null,
                 features: {
                     conversationHistory: true,
                     personalizedResponses: true,
                     feedbackLearning: true,
-                    groqPowered: true,
-                    aiPowered: true,
-                    fastInference: true
+                    groqPowered: groq !== null,
+                    aiPowered: groq !== null,
+                    fastInference: groq !== null,
+                    ruleBasedFallback: true
                 }
             }
         });
